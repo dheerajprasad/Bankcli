@@ -94,6 +94,7 @@ public class ConnectionCommands {
                     consoleService.write("Transferred  " + transactionAmount + " to " + credUser.getUserName());
                     printBalanceAmount();
                     printLoanAmount();
+                    printOwingAmount();
                     return;
 
 
@@ -102,29 +103,34 @@ public class ConnectionCommands {
                     consoleService.write("Transferred  " + userService.getTransferedAmount() + " to " + credUser.getUserName());
                     printBalanceAmount();
                     printLoanAmount();
+                    printOwingAmount();
                     return;
 
                 }else if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS)) {
 
                     printBalanceAmount();
                     printLoanAmount();
+                    printOwingAmount();
                     return;
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_DEBIT_BALANCE)) {
 
                     consoleService.write("Balance is Zero Cannot Pay ");
                     printBalanceAmount();
+                    printOwingAmount();
                     return;
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_LOAN_ALLOWED_EXISTING_LOAN_PRESENT)) {
 
                     consoleService.write("Already Have a Existing Loan -- Cannot do Payment -- Please clear your Loan Amount " + userService.getAccountDetails(userService.getLoggedInuser().getId()).getLoanAmount());
                     printBalanceAmount();
+                    printOwingAmount();
                     return;
 
                 } else {
                     consoleService.write("Transaction Failure -- Cannot Topup");
                     printBalanceAmount();
+                    printOwingAmount();
                     return;
                 }
 
@@ -167,7 +173,7 @@ public class ConnectionCommands {
 
         TransactionDetails loanTransactionDetails = userService.getLoggedinUserLoanDetails();
 
-        if (loanAmount > 0) {
+        if (loanAmount > 0 && loanTransactionDetails!= null) {
             consoleService.write("Owing  " + loanAmount + " to " + userService.getUserDetails(loanTransactionDetails.getCredit_userid()).getUserName());
         }
 
