@@ -7,7 +7,8 @@ import com.clibank.clibank.model.UserAccountDetails;
 public interface TransactionRepository {
      int createTopupTransaction(User user, Double topupAmount , UserAccountDetails userAccountDetails);
     int createTransaction(UserAccountDetails debitAccountDetails, Double transactionAmount , UserAccountDetails creditAccountDetails, String transactionType);
-    TransactionDetails getLoanTransactionDetails(int userId);
+    TransactionDetails getLoanTransactionDetailsDebitUserid(int userId);
+    TransactionDetails getLoanTransactionDetailsCreditUserid(int userId);
 
 
 }

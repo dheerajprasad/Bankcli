@@ -4,7 +4,8 @@ public enum TransactionTypes {
     PAYMENT,
     TOPUP,
     LOAN,
-    LOAN_REPAYMENT;
+    LOAN_REPAYMENT,
+    PAY_TO_LOAN_AMOUNT;
 
 
 

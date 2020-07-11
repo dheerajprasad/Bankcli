@@ -3,6 +3,7 @@ package com.clibank.clibank.shellcomponent;
 
 import com.clibank.clibank.constants.PaymentTransactionTypes;
 import com.clibank.clibank.constants.TransactionTypes;
+import com.clibank.clibank.model.TransactionDetails;
 import com.clibank.clibank.model.User;
 import com.clibank.clibank.model.UserAccountDetails;
 import com.clibank.clibank.service.ConsoleService;
@@ -26,56 +27,106 @@ public class ConnectionCommands {
     @ShellMethod("Login to the Banking Cli")
     public void login(String userName) {
         User user = userService.checkUserExistsElseCreateuser(userName);
-        consoleService.write("Hello  %s ", user.getUserName());
+        consoleService.write("Hello , %s !", user.getUserName());
         consoleService.write("Your Balance is   %s ", userService.getAccountBalance(user.getId()) + "");
+        printOwingAmount();
+        printLoanAmount();
 
     }
 
     @ShellMethod("Top up")
     public void topup(Double topupAmount) {
-        User user = userService.getLoggedInuser();
-        PaymentTransactionTypes transactionTypes  = userService.topUpTransaction(user, topupAmount);
-        if (transactionTypes.equals(PaymentTransactionTypes.TOP_UP_SUCCESS)) {
-            consoleService.write("Your Balance is   %s ", userService.getAccountBalance(user.getId()) + "");
 
+        try {
+            User user = userService.getLoggedInuser();
+            PaymentTransactionTypes transactionTypes = userService.topUpTransaction(user, topupAmount);
+            if (transactionTypes.equals(PaymentTransactionTypes.TOP_UP_SUCCESS)) {
+                printBalanceAmount();
+                printLoanAmount();
+
+            } else if (transactionTypes.equals(PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS)) {
+                printBalanceAmount();
+                printLoanAmount();
+            } else {
+                consoleService.write("Toup  ");
+
+            }
+        } catch (Exception e) {
+            consoleService.write("Some Thing Went wrong Please retry ");
+            printBalanceAmount();
+            return;
         }
+
 
     }
 
     @ShellMethod("Pay")
-    public void Pay(String  creditor , Double transactionAmount) {
+    public void Pay(String creditor, Double transactionAmount) {
 
         try {
 
             if (StringUtils.hasText(creditor)) {
-                    if (transactionAmount <= 0) {
-                        consoleService.write("Enter Valid Amount Greater than 0");
-                        return;
-                    }
-                    User credUser = userService.getUserDetails(creditor);
-                    if (credUser == null) {
-                        consoleService.write("Creditor Not Available in System ");
-                        return;
-                    }
-                    UserAccountDetails credUserAccountDetails = userService.getAccountDetails(credUser.getId());
+                if (transactionAmount <= 0) {
+                    consoleService.write("Enter Valid Amount Greater than 0");
+                    return;
+                }
+                User credUser = userService.getUserDetails(creditor);
+                if (credUser == null) {
+                    consoleService.write("Creditor Not Available in System -- Please Refer to Onboard in the Bank");
+                    return;
+                }
+                if (credUser.getId() == userService.getLoggedInuser().getId()) {
+                    consoleService.write("Cannot Pay to the Same User");
+                    return;
 
-                    if (credUserAccountDetails == null) {
-                        consoleService.write("Creditor Not Available in System ");
-                        return;
-                    }
+                }
 
-                    PaymentTransactionTypes transactionTypes =userService.pay(credUserAccountDetails,transactionAmount);
+                UserAccountDetails credUserAccountDetails = userService.getAccountDetails(credUser.getId());
 
-                   if(transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)){
-                    consoleService.write("Transferred  " + transactionAmount+" to "+credUser.getUserName() );
-                    consoleService.write("Your Balance is   %s ", userService.getAccountBalance(userService.getLoggedInuser().getId())+"");
+                if (credUserAccountDetails == null) {
+                    consoleService.write("Creditor Not Available in System ");
+                    return;
+                }
+
+                PaymentTransactionTypes transactionTypes = userService.pay(credUserAccountDetails, transactionAmount);
+
+                if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
+                    consoleService.write("Transferred  " + transactionAmount + " to " + credUser.getUserName());
+                    printBalanceAmount();
+                    printLoanAmount();
                     return;
 
 
-                }else{
-                       consoleService.write("Transaction Failed -- Technical Error" );
-                       return;
-                     }
+                } else if (transactionTypes.equals(PaymentTransactionTypes.LOAN_AND_PAYMNET_SUCCESS)) {
+
+                    consoleService.write("Transferred  " + userService.getTransferedAmount() + " to " + credUser.getUserName());
+                    printBalanceAmount();
+                    printLoanAmount();
+                    return;
+
+                }else if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS)) {
+
+                    printBalanceAmount();
+                    printLoanAmount();
+                    return;
+
+                } else if (transactionTypes.equals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_DEBIT_BALANCE)) {
+
+                    consoleService.write("Balance is Zero Cannot Pay ");
+                    printBalanceAmount();
+                    return;
+
+                } else if (transactionTypes.equals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_LOAN_ALLOWED_EXISTING_LOAN_PRESENT)) {
+
+                    consoleService.write("Already Have a Existing Loan -- Cannot do Payment -- Please clear your Loan Amount " + userService.getAccountDetails(userService.getLoggedInuser().getId()).getLoanAmount());
+                    printBalanceAmount();
+                    return;
+
+                } else {
+                    consoleService.write("Transaction Failure -- Cannot Topup");
+                    printBalanceAmount();
+                    return;
+                }
 
 
             } else {
@@ -86,6 +137,7 @@ public class ConnectionCommands {
 
         } catch (Exception e) {
             consoleService.write("Some Thing Went wrong Please retry ");
+            printBalanceAmount();
             return;
         }
 
@@ -107,7 +159,42 @@ public class ConnectionCommands {
     }
 
 
+    private void printLoanAmount() {
 
+        UserAccountDetails loggedInUserAccountDetails = userService.getAccountDetails(userService.getLoggedInuser().getId());
+
+        Double loanAmount = loggedInUserAccountDetails.getLoanAmount();
+
+        TransactionDetails loanTransactionDetails = userService.getLoggedinUserLoanDetails();
+
+        if (loanAmount > 0) {
+            consoleService.write("Owing  " + loanAmount + " to " + userService.getUserDetails(loanTransactionDetails.getCredit_userid()).getUserName());
+        }
+
+    }
+
+
+    private void printOwingAmount() {
+
+        UserAccountDetails loggedInUserAccountDetails = userService.getAccountDetails(userService.getLoggedInuser().getId());
+
+        TransactionDetails loanTransactionDetails = userService.getLoanTransactionDetailsCreditUserid(userService.getLoggedInuser().getId());
+        if(loanTransactionDetails == null){
+            return;
+        }
+
+        Double loanAmount = userService.getAccountDetails(loanTransactionDetails.getDebit_userid()).getLoanAmount();
+
+        if (loanAmount > 0) {
+            consoleService.write("Owing  " + loanAmount + " from " + userService.getUserDetails(loanTransactionDetails.getDebit_userid()).getUserName());
+        }
+
+    }
+
+    private void printBalanceAmount() {
+
+        consoleService.write("Your Balance is   %s ", userService.getAccountBalance(userService.getLoggedInuser().getId()) + "");
+    }
 
 
     /*

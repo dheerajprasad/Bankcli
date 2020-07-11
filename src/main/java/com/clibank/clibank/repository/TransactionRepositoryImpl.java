@@ -30,12 +30,21 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     private static final String TRANSACTION_TYPE ="TRANSACTION_TYPE";
 
     private static final String CREATE_TRANSACTION = "INSERT INTO USER_TRANSACTIONS(DEBIT_USERID,DEBIT_ACCOUNT_ID,CREDIT_USERID,CREDIT_ACCOUNT_ID,TRANSACTION_AMOUNT,TRANSACTION_TYPE,CREATED_DATE,UPDATED_DATE) VALUES(:DEBIT_USERID,:DEBIT_ACCOUNT_ID,:CREDIT_USERID,:CREDIT_ACCOUNT_ID,:TRANSACTION_AMOUNT,:TRANSACTION_TYPE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)";
-    private static final String GET_LOAN_DETAILS = "SELECT ID , DEBIT_USERID , DEBIT_ACCOUNT_ID , CREDIT_USERID , CREDIT_ACCOUNT_ID , TRANSACTION_AMOUNT , TRANSACTION_TYPE , CREATED_DATE , UPDATED_DATE FROM  USER_TRANSACTIONS where DEBIT_USERID=:DEBIT_USERID AND TRANSACTION_TYPE ='LOAN'";
+    private static final String GET_LOAN_DETAILS_DEBIT_USERID = "SELECT ID , DEBIT_USERID , DEBIT_ACCOUNT_ID , CREDIT_USERID , CREDIT_ACCOUNT_ID , TRANSACTION_AMOUNT , TRANSACTION_TYPE , CREATED_DATE , UPDATED_DATE FROM  USER_TRANSACTIONS where DEBIT_USERID=:DEBIT_USERID AND TRANSACTION_TYPE ='LOAN'";
+    private static final String GET_LOAN_DETAILS_CREDIT_USERID = "SELECT ID , DEBIT_USERID , DEBIT_ACCOUNT_ID , CREDIT_USERID , CREDIT_ACCOUNT_ID , TRANSACTION_AMOUNT , TRANSACTION_TYPE , CREATED_DATE , UPDATED_DATE FROM  USER_TRANSACTIONS where CREDIT_USERID=:CREDIT_USERID AND TRANSACTION_TYPE ='LOAN'";
+
     @Override
-    public TransactionDetails getLoanTransactionDetails(int userId) {
+    public TransactionDetails getLoanTransactionDetailsDebitUserid(int userId) {
         Map<String,Object> params = new HashMap<>();
         params.put(DEBIT_USERID,userId);
-        return namedParameterJdbcTemplate.query(GET_LOAN_DETAILS,params, (ResultSetExtractor<TransactionDetails>) this::getTransactionDetails);
+        return namedParameterJdbcTemplate.query(GET_LOAN_DETAILS_DEBIT_USERID,params, (ResultSetExtractor<TransactionDetails>) this::getTransactionDetails);
+    }
+
+    @Override
+    public TransactionDetails getLoanTransactionDetailsCreditUserid(int userId) {
+        Map<String,Object> params = new HashMap<>();
+        params.put(CREDIT_USERID,userId);
+        return namedParameterJdbcTemplate.query(GET_LOAN_DETAILS_CREDIT_USERID,params, (ResultSetExtractor<TransactionDetails>) this::getTransactionDetails);
     }
 
     @Override
