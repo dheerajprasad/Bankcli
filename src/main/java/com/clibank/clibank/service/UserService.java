@@ -343,10 +343,11 @@ public class UserService {
                     updatedLoanAmount = 0.0;
                     log.info("Updating the Transaction Amount transactionAmount {} to transactionAmount- originalLoanAmount {}", transactionAmount, transactionAmount - originalLoanAmount);
 
+                    // Updating the Transaction Amount to Proceed after Loan Transaction
                     transactionAmount = transactionAmount - originalLoanAmount;
                 }
                 log.info("updating updatedLoanAmount {}", updatedLoanAmount);
-                int accountUpdateStatus = accountRespository.updateLoanAmountAndLoanRepayment(creditAccountDetails.getUserid(), updatedLoanAmount,"FALSE", creditAccountDetails.getVersion());
+                int accountUpdateStatus = accountRespository.updateLoanAmountAndLoanRepayment(creditAccountDetails.getUserid(), updatedLoanAmount,"TRUE", creditAccountDetails.getVersion());
 
                 if (accountUpdateStatus == 1) {
                     log.info("updating updatedLoanAmount -- Transaction Success");
@@ -363,6 +364,7 @@ public class UserService {
                         log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction -- Success");
 
                         if (OriginalTranAmount <= creditAccountDetails.getLoanAmount()) {
+
                             return PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS;
                         } else {
 
@@ -379,7 +381,7 @@ public class UserService {
                             return PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS_TRANSACTION_CREATION_FAILURE;
                         } else {
                             log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction -- Failure -- Reverting Loan Amount Failure");
-
+                            // Assumption -- Very Rare Case -- Requires Manual Intervention
                             return PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS_TRANSACTION_CREATION_FAILURE_REVERT_LOANAMOUNT_FAILURE;
                         }
 
