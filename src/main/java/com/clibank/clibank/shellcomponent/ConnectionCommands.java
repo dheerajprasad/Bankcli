@@ -90,7 +90,7 @@ public class ConnectionCommands {
 
                 PaymentTransactionTypes transactionTypes = userService.pay(credUserAccountDetails, transactionAmount);
 
-                if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
+                if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)){
                     consoleService.write("Transferred  " + transactionAmount + " to " + credUser.getUserName());
                     printBalanceAmount();
                     printLoanAmount();
