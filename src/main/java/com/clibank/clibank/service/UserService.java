@@ -125,7 +125,7 @@ public class UserService {
     public Double getAccountBalance(int userid) {
 
         UserAccountDetails userAccountDetails = accountRespository.getUserAccountDetails(userid);
-        return userAccountDetails.getBalance();
+        return userAccountDetails.getAvailableBalance();
 
     }
 
@@ -151,9 +151,9 @@ public class UserService {
         UserAccountDetails topupUserAccntDtls = accountRespository.getUserAccountDetails(topupUser.getId());
         UserAccountDetails poolAccntDtls = getPoolAccountDetails();
         User poolAcntuser = getPoolUserDetails();
-        Double debitAccountOriginalBalance = poolAccntDtls.getBalance();
+        Double debitAccountOriginalBalance = poolAccntDtls.getAvailableBalance();
         Double updatedDebitBalance = debitAccountOriginalBalance - topupAmount;
-        Double creditAccountOriginalBalance = topupUserAccntDtls.getBalance();
+        Double creditAccountOriginalBalance = topupUserAccntDtls.getAvailableBalance();
         Double creditUpdatedAccountBalance = creditAccountOriginalBalance + topupAmount;
         //Do a Topup -Payment from Pool to TopupUser
 
@@ -163,7 +163,7 @@ public class UserService {
         if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
 
             topupUserAccntDtls = accountRespository.getUserAccountDetails(topupUser.getId());
-            log.info("Top up for the User is Successful Balance is " + topupUserAccntDtls.getBalance() + "Loan Amount is " + topupUserAccntDtls.getLoanAmount());
+            log.info("Top up for the User is Successful Balance is " + topupUserAccntDtls.getAvailableBalance() + "Loan Amount is " + topupUserAccntDtls.getLoanAmount());
 
 
             // Check Loan Transaction Present
@@ -187,7 +187,7 @@ public class UserService {
 
                 UserAccountDetails creditUserAccountDetails = accountRespository.getUserAccountDetails(loanTransactionDetails.getCredit_userid());
 
-                creditAccountOriginalBalance = creditUserAccountDetails.getBalance();
+                creditAccountOriginalBalance = creditUserAccountDetails.getAvailableBalance();
                 User creditUser = userRepository.getUserByid(loanTransactionDetails.getCredit_userid());
 
                 Double updatedLoanAmount = 0.0;
@@ -195,10 +195,10 @@ public class UserService {
                 Double transactionAmount = 0.0;
 
 
-                if (topupUserAccntDtls.getBalance() >= loanAmount) {
+                if (topupUserAccntDtls.getAvailableBalance() >= loanAmount) {
                     // account Balance Greater than Loan -- create Payment transaction and update loan amount to 0
 
-                    updatedDebitBalance = topupUserAccntDtls.getBalance() - loanAmount;
+                    updatedDebitBalance = topupUserAccntDtls.getAvailableBalance() - loanAmount;
 
                     creditAccountUpdatedBalance = creditAccountOriginalBalance + loanAmount;
                     transactionAmount = loanAmount;
@@ -211,7 +211,7 @@ public class UserService {
 
                     updatedDebitBalance = 0.0;
 
-                    transactionAmount = topupUserAccntDtls.getBalance();
+                    transactionAmount = topupUserAccntDtls.getAvailableBalance();
                     updatedLoanAmount = Math.abs(loanAmount - transactionAmount);
                     creditAccountUpdatedBalance = creditAccountOriginalBalance + topupAmount;
                 }
@@ -231,17 +231,17 @@ public class UserService {
 
                 // Payment Transaction to debit Topup user and Credit the Loanholding user Account
 
-                Double debitLoanPaymentOrgBalance = topupUserAccntDtls.getBalance();
+                Double debitLoanPaymentOrgBalance = topupUserAccntDtls.getAvailableBalance();
                 Double creditLoanPaymentOrgBalance = creditAccountOriginalBalance;
 
 
-                PaymentTransactionTypes transactionTypesPayment = createPaymentTransaction(topupUserAccntDtls.getBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.LOAN_REPAYMENT);
+                PaymentTransactionTypes transactionTypesPayment = createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.LOAN_REPAYMENT);
 
 
                 topupUserAccntDtls = accountRespository.getUserAccountDetails(topupUser.getId());
-                log.info(" topupUser User  Balance is " + topupUserAccntDtls.getBalance() + "Loan Amount is " + topupUserAccntDtls.getLoanAmount());
+                log.info(" topupUser User  Balance is " + topupUserAccntDtls.getAvailableBalance() + "Loan Amount is " + topupUserAccntDtls.getLoanAmount());
                 creditUserAccountDetails = accountRespository.getUserAccountDetails(creditUserAccountDetails.getUserid());
-                log.info(" creditUserAccountDetails User  Balance is " + creditUserAccountDetails.getBalance() + "Loan Amount is " + creditUserAccountDetails.getLoanAmount());
+                log.info(" creditUserAccountDetails User  Balance is " + creditUserAccountDetails.getAvailableBalance() + "Loan Amount is " + creditUserAccountDetails.getLoanAmount());
 
 
                 //Loan Repayment Transaction
@@ -306,7 +306,7 @@ public class UserService {
         User creditUser = userRepository.getUserByid(creditAccountDetails.getUserid());
 
         // Do not Allow Payment if Balance is Zero //Assumption
-        if (debitAccountDetails.getBalance() <= 0.0) {
+        if (debitAccountDetails.getAvailableBalance() <= 0.0) {
 
             log.info("debitAccount Balance Less than 0 ");
             return PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_DEBIT_BALANCE;
@@ -355,10 +355,10 @@ public class UserService {
                     // Create a Payment Record
                     debitAccountDetails = accountRespository.getUserAccountDetails(debitUser.getId());
 
-                    Double debitAccountOriginalbalance = debitAccountDetails.getBalance();
+                    Double debitAccountOriginalbalance = debitAccountDetails.getAvailableBalance();
 
                     log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction");
-                    PaymentTransactionTypes transactionTypes = createPaymentTransaction(debitAccountOriginalbalance, debitAccountOriginalbalance, creditAccountDetails.getBalance(), creditAccountDetails.getBalance(), updatedLoanAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.PAY_TO_LOAN_AMOUNT);
+                    PaymentTransactionTypes transactionTypes = createPaymentTransaction(debitAccountOriginalbalance, debitAccountOriginalbalance, creditAccountDetails.getAvailableBalance(), creditAccountDetails.getAvailableBalance(), updatedLoanAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.PAY_TO_LOAN_AMOUNT);
 
                     if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
                         log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction -- Success");
@@ -407,8 +407,8 @@ public class UserService {
 
 
         //Check Balance >= Transaction Amount
-        if (debitAccountDetails.getBalance() >= transactionAmount) {
-            log.info("debitAccountDetails.getBalance() >= transactionAmount ");
+        if (debitAccountDetails.getAvailableBalance() >= transactionAmount) {
+            log.info("debitAccountDetails.getAvailableBalance() >= transactionAmount ");
             return payTranAmountLessOrEqualToBalance(debitUser, creditUser, debitAccountDetails, creditAccountDetails, transactionAmount);
 
         } else {
@@ -430,11 +430,11 @@ public class UserService {
     public PaymentTransactionTypes payTranAmountLessOrEqualToBalance(User debitUser, User creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails creditAccountDetails, Double transactionAmount) {
 
         //debitAccountOrignialBalance
-        Double debitAccountOrignialBalance = debitAccountDetails.getBalance();
+        Double debitAccountOrignialBalance = debitAccountDetails.getAvailableBalance();
         // debit Amount from debitAccount
         Double updatedDebitBalance = debitAccountOrignialBalance - transactionAmount;
         // creditAccountOrignialBalance
-        Double creditAccountOrignialBalance = creditAccountDetails.getBalance();
+        Double creditAccountOrignialBalance = creditAccountDetails.getAvailableBalance();
         // updated latest Balance = creditaccountpresentbalance + transactionAmount
         Double creditUpdatedAccountBalance = creditAccountOrignialBalance + transactionAmount;
 
@@ -575,17 +575,17 @@ public class UserService {
     public PaymentTransactionTypes payTranAmountMoreThanBalance(User debitUser, User creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails creditAccountDetails, Double transactionAmount) {
 
         //debitAccountOrignialBalance
-        Double debitAccountOrignialBalance = debitAccountDetails.getBalance();
+        Double debitAccountOrignialBalance = debitAccountDetails.getAvailableBalance();
         // debit Account Original LoanAmount
         Double debitAccountOriginalLoanAmount = debitAccountDetails.getLoanAmount();
         // debit Amount from debitAccount
-        Double creditAccountOrignialBalance = creditAccountDetails.getBalance();
+        Double creditAccountOrignialBalance = creditAccountDetails.getAvailableBalance();
         // updated latest Balance = creditaccountpresentbalance + transactionAmount
 
         Double updatedDebitBalance = 0.0;
         // updated latest Balance = creditaccountpresentbalance + transactionAmount
 
-        Double updatedTransactionAmount = debitAccountDetails.getBalance();
+        Double updatedTransactionAmount = debitAccountDetails.getAvailableBalance();
 
         Double DebitLoanBalanceToCreditor = Math.abs(debitAccountOrignialBalance - transactionAmount);
         // creditAccountOrignialBalance
