@@ -158,8 +158,6 @@ public class UserService {
         //Do a Topup -Payment from Pool to TopupUser
 
 
-
-
         PaymentTransactionTypes transactionTypes = createPaymentTransaction(debitAccountOriginalBalance, updatedDebitBalance, creditAccountOriginalBalance, creditUpdatedAccountBalance, topupAmount, poolAcntuser, topupUser, poolAccntDtls, topupUserAccntDtls, TransactionTypes.TOPUP);
 
         if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
@@ -180,9 +178,10 @@ public class UserService {
 
                 //  Check Loan Transaction Present -YES -- Get Loan Details
 
+
                 TransactionDetails loanTransactionDetails = transactionRepository.getLoanTransactionDetailsDebitUserid(topupUser.getId());
 
-                Double loanAmount = loanTransactionDetails.getTransaction_amount();
+                Double loanAmount = topupUserAccntDtls.getLoanAmount();
                 log.info("Loan Transaction Present for the User loanAmount -- {}", loanAmount);
                 // Debit TopupUser Credit Credituser
 
@@ -201,7 +200,7 @@ public class UserService {
 
                     updatedDebitBalance = topupUserAccntDtls.getBalance() - loanAmount;
 
-                    creditAccountUpdatedBalance = creditAccountOriginalBalance + topupAmount;
+                    creditAccountUpdatedBalance = creditAccountOriginalBalance + loanAmount;
                     transactionAmount = loanAmount;
                     updatedLoanAmount = 0.0;
 
