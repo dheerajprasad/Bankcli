@@ -11,5 +11,7 @@ public interface AccountRespository {
     int updateBalance(int userId, Double amount , int version);
     int updateEarMarkAmount(int userId, Double amount, int version);
     int updateLoanAmount(int userId, Double amount , int version);
-    public int updateBalanceAndEarMarkAmount(int userId, Double Balanceamount ,Double earMarkAmount, int version);
+     int updateBalanceAndEarMarkAmount(int userId, Double Balanceamount ,Double earMarkAmount, int version);
+    int updateisLoanPaymentAllowed(int userId, String isAllowed, int version);
+    int updateLoanAmountAndLoanRepayment(int userId, Double amount ,String isAllowed,int version);
 }

@@ -16,6 +16,7 @@ public class UserAccountDetails {
     private Double earMarkAmount;
     private Double availableBalance;
     private Double loanAmount;
+    private String isLoanRepayMentAllowed;
     private  Integer version;
     private Date created_date;
     private Date updated_date;
