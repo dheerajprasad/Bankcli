@@ -415,8 +415,18 @@ public class UserService {
 
     public PaymentTransactionTypes createPaymentTransaction(Double debitAccountOrignialBalance, Double updatedDebitBalance, Double creditAccountOrignialBalance, Double creditUpdatedAccountBalance, Double transactionAmount, User debitUser, User creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails creditAccountDetails, TransactionTypes transactionTypes) {
 
+
+        // Debit the transaction amount from debitor with EarMarking
+
         log.info("debiting the amount {} from the User {} with updated Balance {} ", transactionAmount, debitUser.getUserName(), updatedDebitBalance);
-        int debitTranStatus = accountRespository.updateBalance(debitAccountDetails.getUserid(), updatedDebitBalance, debitAccountDetails.getVersion());
+        //    int debitTranStatus = accountRespository.updateBalance(debitAccountDetails.getUserid(), updatedDebitBalance, debitAccountDetails.getVersion());
+
+        Double originalEarmarkAmount = debitAccountDetails.getEarMarkAmount();
+        Double updatedEarMarkAmoount = originalEarmarkAmount + transactionAmount;
+
+        log.info("originalEarmarkAmount {} to updatedEarMarkAmoount {} for the User {} ", originalEarmarkAmount, updatedEarMarkAmoount, debitUser.getUserName());
+
+        int debitTranStatus = accountRespository.updateBalanceAndEarMarkAmount(debitAccountDetails.getUserid(), updatedDebitBalance, updatedEarMarkAmoount, debitAccountDetails.getVersion());
 
         // debit Transaction Successfull
         if (debitTranStatus == 1) {
@@ -428,6 +438,31 @@ public class UserService {
 
             if (credittranstatus == 1) {
                 // credit Transaction Successfull
+                // update Debit Earmark Amount
+                int removeEarMarkedAmountStatus = accountRespository.updateEarMarkAmount(debitAccountDetails.getUserid(), originalEarmarkAmount, debitAccountDetails.getVersion());
+                if (removeEarMarkedAmountStatus == 1) {
+                    log.info("Removed the earmarked amount added and set back from {} to  {}", updatedEarMarkAmoount, originalEarmarkAmount);
+                    log.info("Debit Success -- Credit Success and Debit Earmark  removal Success -- Proceed to Create Transaction Record");
+
+                } else {
+                    log.info("Removed the earmarked amount added and set back from {} to  {} -- Transaction Failed", updatedEarMarkAmoount, originalEarmarkAmount);
+                    // Revert the Credit back
+                    int revertCreditTranstatus = accountRespository.updateBalance(creditAccountDetails.getUserid(), creditAccountOrignialBalance, creditAccountDetails.getVersion());
+
+                    if (revertCreditTranstatus == 1) {
+                        log.info("Debit Success -- Credit Success and Debit Earmark  removal Failure -- Credit Revert Success");
+                        return PaymentTransactionTypes.PAYMENT_DEBIT_SUCCESS_CREDIT_SUCCESS_DEBIT_EARMARK_REMOVE_FAILURE_CREDIT_REVERT_SUCCESS;
+                        // Manual Handle to remove EarMark from Debit User Account and Add it back to balance
+
+                    } else {
+                        log.info("Debit Success -- Credit Success and Debit Earmark removal Failure -- Credit Revert Failure");
+                        return PaymentTransactionTypes.PAYMENT_DEBIT_SUCCESS_CREDIT_SUCCESS_DEBIT_EARMARK_REMOVE_FAILURE_CREDIT_REVERT_FAILURE;
+                        // Manual Handle to remove EarMark from Debit User Account and mark this as Payment Transaction
+
+                    }
+                }
+                // update Debit Earmark Amount
+
                 log.info("Transaction Success --crediting the amount {} to the User {} with updated Balance {}", transactionAmount, creditUser.getUserName(), creditUpdatedAccountBalance);
 
                 // debit and credit Success -- Create a payment Transaction record
@@ -492,21 +527,22 @@ public class UserService {
                 //debit Success -- Credit Failure
 
                 //revert debit transaction
-                log.info("Debit Revertion -- crediting the amount {} to the Debited User {} with updated Balance {} -- Transaction Success", transactionAmount, debitUser.getUserName(), debitAccountOrignialBalance);
+                log.info("Debit Revertion -- crediting the amount {} to the Debited User {} with updated Balance {}  and Earmark -- Transaction Success", transactionAmount, debitUser.getUserName(), debitAccountOrignialBalance);
 
-                int revertDebitTranStatus = accountRespository.updateBalance(debitAccountDetails.getUserid(), debitAccountOrignialBalance, debitAccountDetails.getVersion());
+                int revertDebitTranStatus = accountRespository.updateBalanceAndEarMarkAmount(debitAccountDetails.getUserid(), debitAccountOrignialBalance, originalEarmarkAmount, debitAccountDetails.getVersion());
 
                 if (revertDebitTranStatus == 1) {
 
-                    log.info("Debit Revertion  Success-- crediting the amount {} to the Debited User {} with updated Balance {}", transactionAmount, debitUser.getUserName(), debitAccountOrignialBalance);
+                    log.info("Debit Success /Credit Failure / Debit Revertion  Success-- crediting the amount {} to the Debited User {} with updated Balance {}", transactionAmount, debitUser.getUserName(), debitAccountOrignialBalance);
                     return PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_FAILURE;
                 } else {
 
                     // debit revertion Failure
 
-                    log.info("Debit Revertion  Faiure --  crediting the amount {} to the Debited User {} with updated Balance {} ", transactionAmount, debitUser.getUserName(), creditAccountOrignialBalance);
+                    log.info("Debit Success /Credit Failure / Debit Revertion Faiure --  crediting the amount {} to the Debited User {} with updated Balance {} ", transactionAmount, debitUser.getUserName(), creditAccountOrignialBalance);
 
                     return PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_FAILURE_DEBIT_REVERT_FAILURE;
+                    // Manual Handing Required to remove the earmark Amount for the debit User and add to the balance
                 }
 
 

@@ -9,6 +9,7 @@ public interface AccountRespository {
     UserAccountDetails getUserAccountDetails(int Userid);
 
     int updateBalance(int userId, Double amount , int version);
-    int updateEarMarkAmount(int userId, Double amount);
+    int updateEarMarkAmount(int userId, Double amount, int version);
     int updateLoanAmount(int userId, Double amount , int version);
+    public int updateBalanceAndEarMarkAmount(int userId, Double Balanceamount ,Double earMarkAmount, int version);
 }

@@ -28,7 +28,7 @@ public class AccountRepositoryimpl implements AccountRespository {
     private static final String UPDATE_ACCOUNT =  "UPDATE  USER_ACCOUNTDETAILS SET BALANCE =:BALANCE WHERE USERID=:USERID AND VERSION=:VERSION";
     private static final String UPDATE_EARMARK =  "UPDATE  USER_ACCOUNTDETAILS SET EARMARKAMOUNT =:EARMARKAMOUNT WHERE USERID=:USERID AND VERSION=:VERSION";
     private static final String UPDATE_LOANAMOUNT=  "UPDATE  USER_ACCOUNTDETAILS SET LOANAMOUNT =:LOANAMOUNT WHERE USERID=:USERID AND VERSION=:VERSION";
-
+    private static final String UPDATE_BALANCEAND_EARMARKAMOUNT=  "UPDATE  USER_ACCOUNTDETAILS SET BALANCE =:BALANCE ,EARMARKAMOUNT =:EARMARKAMOUNT  WHERE USERID=:USERID AND VERSION=:VERSION";
 
     @Override
     public int createAccount(int userId, String accountNumber) {
@@ -61,12 +61,25 @@ public class AccountRepositoryimpl implements AccountRespository {
         return namedParameterJdbcTemplate.update(UPDATE_ACCOUNT,params);
     }
 
+    @Override
+    public int updateBalanceAndEarMarkAmount(int userId, Double Balanceamount ,Double earMarkAmount, int version) {
 
-    public int updateEarMarkAmount(int userId, Double amount) {
+        Map<String,Object> params = new HashMap<>();
+        params.put(USERID,userId);
+        params.put(BALANCE,Balanceamount);
+        params.put(EARMARKAMOUNT,earMarkAmount);
+        params.put(VERSION,version);
+        return namedParameterJdbcTemplate.update(UPDATE_BALANCEAND_EARMARKAMOUNT,params);
+    }
+
+
+
+    public int updateEarMarkAmount(int userId, Double amount, int version) {
 
         Map<String,Object> params = new HashMap<>();
         params.put(USERID,userId);
         params.put(EARMARKAMOUNT,amount);
+        params.put(VERSION,version);
         return namedParameterJdbcTemplate.update(UPDATE_EARMARK,params);
     }
 
@@ -93,6 +106,7 @@ public class AccountRepositoryimpl implements AccountRespository {
         userAccountDetails.setBalance(rs.getDouble("BALANCE"));
         userAccountDetails.setEarMarkAmount(rs.getDouble("EARMARKAMOUNT"));
         userAccountDetails.setLoanAmount(rs.getDouble("LOANAMOUNT"));
+        userAccountDetails.setAvailableBalance(userAccountDetails.getBalance()-userAccountDetails.getEarMarkAmount());
         userAccountDetails.setVersion(rs.getInt("VERSION"));
         userAccountDetails.setCreated_date(rs.getObject("CREATED_DATE", Date.class));
         userAccountDetails.setUpdated_date(rs.getObject("UPDATED_DATE", Date.class));
