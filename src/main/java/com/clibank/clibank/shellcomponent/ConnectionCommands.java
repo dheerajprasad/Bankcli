@@ -115,15 +115,14 @@ public class ConnectionCommands {
                     printOwingAmount();
                     return;
 
-                } else if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS)) {
-
+                } else if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_INITIATED_WITH_LOAN_AND_PAYMENT_SUCCESS_LOAN_FAILURE)) {
+                    consoleService.write("Transferred  " + transactionAmount + " to " + credUser.getUserName());
                     printBalanceAmount();
                     printLoanAmount();
                     printOwingAmount();
                     return;
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_DEBIT_BALANCE)) {
-
                     consoleService.write("Balance is Zero Cannot Pay ");
                     printBalanceAmount();
                     printOwingAmount();

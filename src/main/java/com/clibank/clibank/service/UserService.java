@@ -677,7 +677,7 @@ public class UserService {
                 return PaymentTransactionTypes.PAYMNET_AND_LOAN_SUCCESS;
             } else {
                 log.info("Payment Transaction Success --Loan Transaction Failure -");
-                return PaymentTransactionTypes.PAYMENT_INITIATED_WITH_LOAN_PAYMENT_SUCCESS_LOAN_FAILURE;
+                return PaymentTransactionTypes.PAYMENT_INITIATED_WITH_LOAN_AND_PAYMENT_SUCCESS_LOAN_FAILURE;
             }
 
         } else {
