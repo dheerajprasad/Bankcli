@@ -99,7 +99,7 @@ public class UserService {
         if (user == null) {
             userRepository.createuser(userName);
             user = userRepository.getUserByName(userName);
-            accountRespository.createAccount(user.getId(), generateAccountNumber());
+            accountRespository.createAccount(user.getId(), user.getUserName());
         }
         this.Connect(user);
         return user;
@@ -174,7 +174,7 @@ public class UserService {
             if (topupUserAccntDtls.getLoanAmount() > 0.0 && topupUserAccntDtls.getIsLoanRepayMentAllowed().equalsIgnoreCase("TRUE")) {
 
 
-                log.info("Loan Transaction Present for the User {} && getIsLoanRepayMentAllowed " + topupUserAccntDtls.getLoanAmount() ,topupUserAccntDtls.getIsLoanRepayMentAllowed());
+                log.info("Loan Transaction Present for the User {} && getIsLoanRepayMentAllowed " + topupUserAccntDtls.getLoanAmount(), topupUserAccntDtls.getIsLoanRepayMentAllowed());
 
                 //  Check Loan Transaction Present -YES -- Get Loan Details
 
@@ -235,7 +235,7 @@ public class UserService {
                 Double creditLoanPaymentOrgBalance = creditAccountOriginalBalance;
 
 
-                PaymentTransactionTypes transactionTypesPayment = createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.LOAN_REPAYMENT);
+                PaymentTransactionTypes transactionTypesPayment = createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.TOP_INITIATED_LOAN_REPAYMENT);
 
 
                 topupUserAccntDtls = accountRespository.getUserAccountDetails(topupUser.getId());
@@ -251,7 +251,7 @@ public class UserService {
 
                     //update loan amount for topup User
 
-                    int loanUpdateTranStatus = accountRespository.updateLoanAmountAndLoanRepayment(topupUser.getId(), updatedLoanAmount,"TRUE", topupUserAccntDtls.getVersion());
+                    int loanUpdateTranStatus = accountRespository.updateLoanAmountAndLoanRepayment(topupUser.getId(), updatedLoanAmount, "TRUE", topupUserAccntDtls.getVersion());
                     if (loanUpdateTranStatus == 1) {
                         log.info("Topup  Payment Success -- Loan Repayment Success -- update Loan Amount Success");
 
@@ -261,7 +261,7 @@ public class UserService {
                         log.info("Topup  Payment Success -- Loan Repayment Success -- update Loan Amount Failure");
 
                         //Assumption - This type of Issue is very Rare --
-                       // Blocking the Payment Transaction between this Users to Sort out the Update Loan clearing Process
+                        // Blocking the Payment Transaction between this Users to Sort out the Update Loan clearing Process
                         // Manual Intervention to Sort out this Issue required - update Loan amount to updated Loan amount and set LoanPayment Allowed to TRUE
 
                         return PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS_UPDATE_LOAN_AMOUNT_FAILURE;
@@ -320,7 +320,7 @@ public class UserService {
             TransactionDetails CreditorLoanTransactionDetails = transactionRepository.getLoanTransactionDetailsDebitUserid(creditAccountDetails.getUserid());
             if (CreditorLoanTransactionDetails.getCredit_userid() == getLoggedInuser().getId()) {
 
-                if(debitAccountDetails.getIsLoanRepayMentAllowed().equalsIgnoreCase("FALSE")){
+                if (debitAccountDetails.getIsLoanRepayMentAllowed().equalsIgnoreCase("FALSE")) {
 
                     log.info("Loan Repayment Not Allowed for You --");
                     return PaymentTransactionTypes.LOAN_REPAY_DISPUTE_PRENDING;
@@ -347,7 +347,7 @@ public class UserService {
                     transactionAmount = transactionAmount - originalLoanAmount;
                 }
                 log.info("updating updatedLoanAmount {}", updatedLoanAmount);
-                int accountUpdateStatus = accountRespository.updateLoanAmountAndLoanRepayment(creditAccountDetails.getUserid(), updatedLoanAmount,"TRUE", creditAccountDetails.getVersion());
+                int accountUpdateStatus = accountRespository.updateLoanAmountAndLoanRepayment(creditAccountDetails.getUserid(), updatedLoanAmount, "TRUE", creditAccountDetails.getVersion());
 
                 if (accountUpdateStatus == 1) {
                     log.info("updating updatedLoanAmount -- Transaction Success");
@@ -358,7 +358,7 @@ public class UserService {
                     Double debitAccountOriginalbalance = debitAccountDetails.getAvailableBalance();
 
                     log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction");
-                    PaymentTransactionTypes transactionTypes = createPaymentTransaction(debitAccountOriginalbalance, debitAccountOriginalbalance, creditAccountDetails.getAvailableBalance(), creditAccountDetails.getAvailableBalance(), updatedLoanAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.PAY_TO_LOAN_AMOUNT);
+                    PaymentTransactionTypes transactionTypes = createPaymentTransaction(debitAccountOriginalbalance, debitAccountOriginalbalance, creditAccountDetails.getAvailableBalance(), creditAccountDetails.getAvailableBalance(), updatedLoanAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.PAYMENT_INITIATED_LOAN_REPAYMENT);
 
                     if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
                         log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction -- Success");
@@ -375,7 +375,7 @@ public class UserService {
                         log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction -- Failure");
 
                         // revert the update LoanAmount
-                        int accountRevertStatus = accountRespository.updateLoanAmountAndLoanRepayment(CreditorLoanTransactionDetails.getCredit_userid(), originalLoanAmount,"TRUE", creditAccountDetails.getVersion());
+                        int accountRevertStatus = accountRespository.updateLoanAmountAndLoanRepayment(CreditorLoanTransactionDetails.getCredit_userid(), originalLoanAmount, "TRUE", creditAccountDetails.getVersion());
                         if (accountRevertStatus == 1) {
                             log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction -- Failure -- Reverting Loan Amount Success");
                             return PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS_TRANSACTION_CREATION_FAILURE;
@@ -386,7 +386,7 @@ public class UserService {
                         }
 
                     }
-                }else{
+                } else {
                     log.info("updating updatedLoanAmount -- Failure ");
                     return PaymentTransactionTypes.LOAN_REPAY_UPDATE_LOAN_AMOUNT_FAILURE;
 
@@ -438,7 +438,7 @@ public class UserService {
         // updated latest Balance = creditaccountpresentbalance + transactionAmount
         Double creditUpdatedAccountBalance = creditAccountOrignialBalance + transactionAmount;
 
-        PaymentTransactionTypes transactionTypes = createPaymentTransaction(debitAccountOrignialBalance, updatedDebitBalance, creditAccountOrignialBalance, creditUpdatedAccountBalance, transactionAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.PAYMENT);
+        PaymentTransactionTypes transactionTypes = createPaymentTransaction(debitAccountOrignialBalance, updatedDebitBalance, creditAccountOrignialBalance, creditUpdatedAccountBalance, transactionAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER);
 
         return transactionTypes;
     }
@@ -518,7 +518,7 @@ public class UserService {
                             log.info("Debit Revertion  Faiure --  crediting the amount {} to the Debited User {} with updated Balance {} ", transactionAmount, debitUser.getUserName(), creditAccountOrignialBalance);
 
                             return PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRANSACTION_CREATE_FAUIRE_CREDIT_REVERT_SUCCESS_DEBIT_REVERT_FAILURE;
-                            // Manual Intervention Required to Remove the EarMark Amount and Add to the Balance
+                            // Manual Intervention Required to Remove the transaction EarMark Amount and Add transaction amount to the Balance
                         }
 
 
@@ -571,6 +571,7 @@ public class UserService {
 
     }
 
+/*
 
     public PaymentTransactionTypes payTranAmountMoreThanBalance(User debitUser, User creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails creditAccountDetails, Double transactionAmount) {
 
@@ -600,7 +601,7 @@ public class UserService {
         if (loanTransactionTypes.equals(PaymentTransactionTypes.LOAN_TRANSACTION_SUCCESS)) {
             log.info("Loan Transaction Success -- Creating the Payment Transaction");
 
-            PaymentTransactionTypes payTransactionType = createPaymentTransaction(debitAccountOrignialBalance, updatedDebitBalance, creditAccountOrignialBalance, creditUpdatedAccountBalance, updatedTransactionAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.PAYMENT);
+            PaymentTransactionTypes payTransactionType = createPaymentTransaction(debitAccountOrignialBalance, updatedDebitBalance, creditAccountOrignialBalance, creditUpdatedAccountBalance, updatedTransactionAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER);
 
             if (payTransactionType.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
                 log.info("Loan Transaction and Payment Transaction Success");
@@ -609,7 +610,7 @@ public class UserService {
             } else {
                 log.info("Loan Transaction Success and Payment Transaction Failure -- Reverting Loan Transaction");
 
-                int loanAmtReverStat = accountRespository.updateLoanAmount(debitUser.getId(), debitAccountOriginalLoanAmount, debitAccountDetails.getVersion());
+                int loanAmtReverStat = accountRespository.updateLoanAmountAndLoanRepayment(debitUser.getId(), debitAccountOriginalLoanAmount,"FALSE", debitAccountDetails.getVersion());
 
                 if (loanAmtReverStat == 1) {
                     // Loan Transaction Success and Payment Transaction Failure  // Reverting Loan Transaction --- Success
@@ -639,52 +640,97 @@ public class UserService {
     }
 
 
+*/
+
+
+    public PaymentTransactionTypes payTranAmountMoreThanBalance(User debitUser, User creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails creditAccountDetails, Double transactionAmount) {
+
+        //debitAccountOrignialBalance
+        Double debitAccountOrignialBalance = debitAccountDetails.getAvailableBalance();
+        // debit Account Original LoanAmount
+        Double debitAccountOriginalLoanAmount = debitAccountDetails.getLoanAmount();
+        // debit Amount from debitAccount
+        Double creditAccountOrignialBalance = creditAccountDetails.getAvailableBalance();
+        // updated latest Balance = creditaccountpresentbalance + transactionAmount
+
+        Double updatedDebitBalance = 0.0;
+        // updated latest Balance = creditaccountpresentbalance + transactionAmount
+
+        Double updatedTransactionAmount = debitAccountDetails.getAvailableBalance();
+
+        Double DebitLoanBalanceToCreditor = Math.abs(debitAccountOrignialBalance - transactionAmount);
+        // creditAccountOrignialBalance
+
+        Double creditUpdatedAccountBalance = creditAccountOrignialBalance + debitAccountOrignialBalance;
+
+        //  Initiate the Payment Transaction --
+        PaymentTransactionTypes payTransactionType = createPaymentTransaction(debitAccountOrignialBalance, updatedDebitBalance, creditAccountOrignialBalance, creditUpdatedAccountBalance, updatedTransactionAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER_WITH_LOAN);
+
+        if (payTransactionType.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
+            log.info("Payment Transaction Success");
+            this.tranferedAmount = updatedTransactionAmount;
+            //  Payment Transaction Success -- Initiate the Loan Transaction
+
+            PaymentTransactionTypes loanTransactionTypes = createLoanTransaction(debitUser, creditUser, debitAccountDetails, creditAccountDetails, DebitLoanBalanceToCreditor);
+            if (loanTransactionTypes.equals(PaymentTransactionTypes.LOAN_TRANSACTION_SUCCESS)) {
+                log.info("Payment Transaction Success --Loan Transaction Success -");
+                return PaymentTransactionTypes.PAYMNET_AND_LOAN_SUCCESS;
+            } else {
+                log.info("Payment Transaction Success --Loan Transaction Failure -");
+                return PaymentTransactionTypes.PAYMENT_INITIATED_WITH_LOAN_PAYMENT_SUCCESS_LOAN_FAILURE;
+            }
+
+        } else {
+            log.info("payTranAmountMoreThanBalance -- Payment Transaction Failure");
+            // Payment Failed -- Reverting Failure
+            return payTransactionType;
+        }
+
+
+    }
+
+
     public PaymentTransactionTypes createLoanTransaction(User debitUser, User creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails creditAccountDetails, Double loanAmount) {
 
+        if (debitAccountDetails.getIsLoanRepayMentAllowed().equalsIgnoreCase("FALSE")) {
+            log.info("Loan Repayment Not Allowed for the User as his getIsLoanRepayMentAllowed is {}", debitAccountDetails.getIsLoanRepayMentAllowed());
+            return PaymentTransactionTypes.LOAN_REPAYMENT_NOT_ALLOWED_FOR_USER;
+        }
         Double originalLoanAmountforDebitUser = debitAccountDetails.getLoanAmount();
-
-
         Double updatedLoanAmount = originalLoanAmountforDebitUser + loanAmount;
         log.info("Orignal Loan amount {} for the user", debitAccountDetails.getLoanAmount(), debitUser.getUserName());
         // update the Loan Amount
         log.info("Updating the Loan amount {} for the user", loanAmount, debitUser.getUserName());
-        int updateLoanAmtStatus = accountRespository.updateLoanAmount(debitUser.getId(), loanAmount, debitAccountDetails.getVersion());
+        int updateLoanAmtStatus = accountRespository.updateLoanAmountAndLoanRepayment(debitUser.getId(), loanAmount, "FALSE", debitAccountDetails.getVersion());
         if (updateLoanAmtStatus == 1) {
             log.info(" Transaction Success -- Updating the Loan amount {} for the user", loanAmount, debitUser.getUserName());
-
             // update LoanAmount Success -- create Transaction Record for loan transaction
-
-            int transactionInsertStatus = transactionRepository.createTransaction(debitAccountDetails, updatedLoanAmount, creditAccountDetails, TransactionTypes.LOAN.name());
-
+            int transactionInsertStatus = transactionRepository.createTransaction(debitAccountDetails, updatedLoanAmount, creditAccountDetails, TransactionTypes.PAYMENT_INITIATED_LOAN.name());
             if (transactionInsertStatus == 1) {
-
                 // Loan upadate Success and Loan Transaction Creation is Success
-
-                log.info(" Loan update Success and Loan Transaction Creation is Success");
-
-                return PaymentTransactionTypes.LOAN_TRANSACTION_SUCCESS;
-
+                //release Loan Lock after Loan upadate Success and Loan Transaction Creation is Success
+                int updatelockreleaesstatus = accountRespository.updateisLoanPaymentAllowed(debitUser.getId(), "TRUE", debitAccountDetails.getVersion());
+                if (updatelockreleaesstatus == 1) {
+                    log.info("release Loan Lock after Loan upadate Success and Loan Transaction Creation is Success");
+                    return PaymentTransactionTypes.LOAN_TRANSACTION_SUCCESS;
+                } else {
+                    log.info("release Loan Lock after Loan upadate Success and Loan Transaction Creation is Failure");
+                    return PaymentTransactionTypes.LOAN_UPDATE_SUCCESS_TRAN_CREATE_SUCCESS_LOAN_LOCK_REVERT_FAILURE;
+                    // Manual Intervention required to release Loan lock
+                }
             } else {
-
-                log.info(" Loan update Success and Loan Transaction Creation is Failure");
+              log.info(" Loan update Success and Loan Transaction Creation is Failure");
                 // Loan upadate Success and Loan Transaction Creation is Failure
                 //revert Loan Amount
-
-                int loanAmtReverStat = accountRespository.updateLoanAmount(debitUser.getId(), originalLoanAmountforDebitUser, debitAccountDetails.getVersion());
-
+               int loanAmtReverStat = accountRespository.updateLoanAmountAndLoanRepayment(debitUser.getId(), originalLoanAmountforDebitUser, "TRUE", debitAccountDetails.getVersion());
                 if (loanAmtReverStat == 1) {
-
-                    return PaymentTransactionTypes.LOAN_UPDATE_SUCCESS_TRAN_INS_FAILURE;
-
-                    //
-
+                    log.info(" LOAN_UPDATE_SUCCESS_TRAN_INS_FAILURE_LOAN_REVERT_SUCCESS");
+                    return PaymentTransactionTypes.LOAN_UPDATE_SUCCESS_TRAN_INS_FAILURE_LOAN_REVERT_SUCCESS;
                 } else {
-
                     //Loan update Success tran insertion failure -- loanrevertion Failure
-
+                    log.info(" LOAN_UPDATE_SUCCESS_TRAN_INS_FAILURE_LOAN_REVERT_FAILURE");
                     return PaymentTransactionTypes.LOAN_UPDATE_SUCCESS_TRAN_INS_FAILURE_LOAN_REVERT_FAILURE;
-
-
+                    // Manual Intervention required to release the Loan Lock for the user and update the loan amount back to original loan amount
                 }
 
 

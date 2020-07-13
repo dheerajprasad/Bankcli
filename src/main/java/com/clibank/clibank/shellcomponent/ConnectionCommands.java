@@ -2,7 +2,6 @@ package com.clibank.clibank.shellcomponent;
 
 
 import com.clibank.clibank.constants.PaymentTransactionTypes;
-import com.clibank.clibank.constants.TransactionTypes;
 import com.clibank.clibank.model.TransactionDetails;
 import com.clibank.clibank.model.User;
 import com.clibank.clibank.model.UserAccountDetails;
@@ -108,7 +107,7 @@ public class ConnectionCommands {
                     return;
 
 
-                } else if (transactionTypes.equals(PaymentTransactionTypes.LOAN_AND_PAYMNET_SUCCESS)) {
+                } else if (transactionTypes.equals(PaymentTransactionTypes.PAYMNET_AND_LOAN_SUCCESS)) {
 
                     consoleService.write("Transferred  " + userService.getTransferedAmount() + " to " + credUser.getUserName());
                     printBalanceAmount();
