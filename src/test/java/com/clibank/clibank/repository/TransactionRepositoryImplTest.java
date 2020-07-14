@@ -61,9 +61,6 @@ public class TransactionRepositoryImplTest {
         userAccountDetails.setAccount_number("123");
         userAccountDetails.setBalance(1.0);
         userAccountDetails.setEarMarkAmount(0.0);
-        userAccountDetails.setLoanAmount(0.);
-
-        userAccountDetails.setIsLoanRepayMentAllowed("TRUE");
         userAccountDetails.setVersion(1);
             return userAccountDetails;
     }
@@ -74,9 +71,6 @@ public class TransactionRepositoryImplTest {
         userAccountDetails.setAccount_number("123");
         userAccountDetails.setBalance(1.0);
         userAccountDetails.setEarMarkAmount(0.0);
-        userAccountDetails.setLoanAmount(0.);
-
-        userAccountDetails.setIsLoanRepayMentAllowed("TRUE");
         userAccountDetails.setVersion(1);
         return userAccountDetails;
     }

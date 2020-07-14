@@ -3,6 +3,7 @@ package com.clibank.clibank.repository;
 import com.clibank.clibank.model.TransactionDetails;
 import com.clibank.clibank.model.User;
 import com.clibank.clibank.model.UserAccountDetails;
+import com.clibank.clibank.model.UserLoanDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -69,6 +70,19 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         params.put(DEBIT_ACCOUNT_ID,debitAccountDetails.getAccount_number());
         params.put(CREDIT_USERID,creditAccountDetails.getUserid());
         params.put(CREDIT_ACCOUNT_ID,creditAccountDetails.getAccount_number());
+        params.put(TRANSACTION_AMOUNT,transactionAmount);
+        params.put(TRANSACTION_TYPE,transactionType);
+        return    namedParameterJdbcTemplate.update(CREATE_TRANSACTION,params);
+    }
+
+    @Override
+    public int createTransactionLoan(UserLoanDetails userLoanDetails,Double transactionAmount ,String transactionType) {
+
+        Map<String,Object> params = new HashMap<>();
+        params.put(DEBIT_USERID,userLoanDetails.getUserid());
+        params.put(DEBIT_ACCOUNT_ID,userLoanDetails.getAccount_number());
+        params.put(CREDIT_USERID,userLoanDetails.getPayToUserId());
+        params.put(CREDIT_ACCOUNT_ID,userLoanDetails.getAccount_number());
         params.put(TRANSACTION_AMOUNT,transactionAmount);
         params.put(TRANSACTION_TYPE,transactionType);
         return    namedParameterJdbcTemplate.update(CREATE_TRANSACTION,params);

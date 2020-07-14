@@ -5,6 +5,7 @@ import com.clibank.clibank.constants.PaymentTransactionTypes;
 import com.clibank.clibank.model.TransactionDetails;
 import com.clibank.clibank.model.User;
 import com.clibank.clibank.model.UserAccountDetails;
+import com.clibank.clibank.model.UserLoanDetails;
 import com.clibank.clibank.service.ConsoleService;
 import com.clibank.clibank.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -130,7 +131,7 @@ public class ConnectionCommands {
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_LOAN_ALLOWED_EXISTING_LOAN_PRESENT)) {
 
-                    consoleService.write("Already Have a Existing Loan -- Cannot do Payment -- Please clear your Loan Amount " + userService.getAccountDetails(userService.getLoggedInuser().getId()).getLoanAmount());
+                    consoleService.write("Already Have a Existing Loan -- Cannot do Payment -- Please clear your Loan Amount " + userService.getLoanAccountDetails(userService.getLoggedInuser().getId()).getAvailableBalance());
                     printBalanceAmount();
                     printOwingAmount();
                     return;
@@ -182,14 +183,14 @@ public class ConnectionCommands {
 
     private void printLoanAmount() {
 
-        UserAccountDetails loggedInUserAccountDetails = userService.getAccountDetails(userService.getLoggedInuser().getId());
+        UserLoanDetails userLoanDetails = userService.getLoanAccountDetails(userService.getLoggedInuser().getId());
+        if(userLoanDetails ==null){
+            return;
+        }
+        Double loanAmount = userLoanDetails.getAvailableBalance();
 
-        Double loanAmount = loggedInUserAccountDetails.getLoanAmount();
-
-        TransactionDetails loanTransactionDetails = userService.getLoggedinUserLoanDetails();
-
-        if (loanAmount > 0 && loanTransactionDetails != null) {
-            consoleService.write("Owing  " + loanAmount + " to " + userService.getUserDetails(loanTransactionDetails.getCredit_userid()).getUserName());
+        if (loanAmount > 0 ) {
+            consoleService.write("Owing  " + loanAmount + " to " + userService.getUserDetails(userLoanDetails.getPayToUserId()));
         }
 
     }
@@ -197,17 +198,13 @@ public class ConnectionCommands {
 
     private void printOwingAmount() {
 
-        UserAccountDetails loggedInUserAccountDetails = userService.getAccountDetails(userService.getLoggedInuser().getId());
-
-        TransactionDetails loanTransactionDetails = userService.getLoanTransactionDetailsCreditUserid(userService.getLoggedInuser().getId());
-        if (loanTransactionDetails == null) {
+        UserLoanDetails userLoanDetails = userService.getLoanAccountforPaytoDetails(userService.getLoggedInuser().getId());
+        if(userLoanDetails ==null){
             return;
         }
-
-        Double loanAmount = userService.getAccountDetails(loanTransactionDetails.getDebit_userid()).getLoanAmount();
-
+        Double loanAmount = userLoanDetails.getAvailableBalance();
         if (loanAmount > 0) {
-            consoleService.write("Owing  " + loanAmount + " from " + userService.getUserDetails(loanTransactionDetails.getDebit_userid()).getUserName());
+            consoleService.write("Owing  " + loanAmount + " from " + userService.getUserDetails(userLoanDetails.getUserid()));
         }
 
     }
