@@ -188,6 +188,12 @@ public class ConnectionCommands {
         return this.userService.isConnected() ? Availability.available() : Availability.unavailable("You are not Logged in ");
     }
 
+    Availability PayAvailability() {
+        return this.userService.isConnected() ? Availability.available() : Availability.unavailable("You are not Logged in ");
+    }
+    Availability topupAvailability() {
+        return this.userService.isConnected() ? Availability.available() : Availability.unavailable("You are not Logged in ");
+    }
 
     private void printLoanAmount() {
 
