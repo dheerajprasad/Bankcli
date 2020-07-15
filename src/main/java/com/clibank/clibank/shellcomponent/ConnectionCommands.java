@@ -14,6 +14,7 @@ import org.springframework.shell.Availability;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.util.StringUtils;
+
 @Slf4j
 @ShellComponent
 public class ConnectionCommands {
@@ -46,6 +47,7 @@ public class ConnectionCommands {
                 printLoanAmount();
 
             } else if (transactionTypes.equals(PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS)) {
+                consoleService.write("Transferred  " + userService.getTransferedAmount() + " to " + userService.getUserDetails(userService.getLoanAccountDetails(user.getId()).getPayToUserId()).getUserName());
                 printBalanceAmount();
                 printLoanAmount();
             } else if (transactionTypes.equals(PaymentTransactionTypes.TOP_UP_SUCCESS_LOAN_REPAYMENT_FAILURE)) {
@@ -61,8 +63,8 @@ public class ConnectionCommands {
 
             }
         } catch (Exception e) {
-            consoleService.write("Some Thing Went wrong Please retry "  );
-            log.info("Exception "+e);
+            consoleService.write("Some Thing Went wrong Please retry ");
+            log.info("Exception " + e);
             printBalanceAmount();
             return;
         }
@@ -107,6 +109,12 @@ public class ConnectionCommands {
                     printOwingAmount();
                     return;
 
+
+                } else if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS)) {
+                    printBalanceAmount();
+                    printLoanAmount();
+                    printOwingAmount();
+                    return;
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.PAYMNET_AND_LOAN_SUCCESS)) {
 
@@ -184,13 +192,13 @@ public class ConnectionCommands {
     private void printLoanAmount() {
 
         UserLoanDetails userLoanDetails = userService.getLoanAccountDetails(userService.getLoggedInuser().getId());
-        if(userLoanDetails ==null){
+        if (userLoanDetails == null) {
             return;
         }
         Double loanAmount = userLoanDetails.getAvailableBalance();
 
-        if (loanAmount > 0 ) {
-            consoleService.write("Owing  " + loanAmount + " to " + userService.getUserDetails(userLoanDetails.getPayToUserId()));
+        if (loanAmount > 0) {
+            consoleService.write("Owing  " + loanAmount + " to " + userService.getUserDetails(userLoanDetails.getPayToUserId()).getUserName());
         }
 
     }
@@ -199,12 +207,12 @@ public class ConnectionCommands {
     private void printOwingAmount() {
 
         UserLoanDetails userLoanDetails = userService.getLoanAccountforPaytoDetails(userService.getLoggedInuser().getId());
-        if(userLoanDetails ==null){
+        if (userLoanDetails == null) {
             return;
         }
         Double loanAmount = userLoanDetails.getAvailableBalance();
         if (loanAmount > 0) {
-            consoleService.write("Owing  " + loanAmount + " from " + userService.getUserDetails(userLoanDetails.getUserid()));
+            consoleService.write("Owing  " + loanAmount + " from " + userService.getUserDetails(userLoanDetails.getUserid()).getUserName());
         }
 
     }

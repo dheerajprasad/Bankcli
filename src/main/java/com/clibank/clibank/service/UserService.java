@@ -219,6 +219,7 @@ public class UserService {
                 if (transactionTypesPayment.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
                     // Topup  Payment Success
                     log.info("Topup  Payment Success -- Loan Repayment Success");
+                    this.tranferedAmount=transactionAmount;
                     //update loan amount for topup User
                     //   int loanUpdateTranStatus = accountRespository.updateLoanAmountAndLoanRepayment(topupUser.getId(), updatedLoanAmount, "TRUE", topupUserAccntDtls.getVersion());
                     int loanrevertTranStatus = loanRespository.updateBalanceAndEarMarkAmount(topupUser.getId(), updatedLoanAmount, originalEarmarkAmount, topupUserLoanDetails.getVersion());
@@ -272,7 +273,7 @@ public class UserService {
 
 
         // Check whether the Creditor has Loan Associated
-        UserLoanDetails creditUserLoanDetails = loanRespository.getUserAccountDetailsPayToUserId(creditAccountDetails.getUserid());
+        UserLoanDetails creditUserLoanDetails = loanRespository.getUserAccountDetails(creditAccountDetails.getUserid());
         if (creditUserLoanDetails != null && creditUserLoanDetails.getAvailableBalance() > 0) {
             log.info("Creditor has  Previous Loan");
             log.info("Checking if the Loan is Associated  With Present payer");
@@ -370,7 +371,8 @@ public class UserService {
 
         } else {
             // Do not Allow Loan Transaction if there is already a existing Loan //Assumption
-            if (loanRespository.getUserAccountDetails(getLoggedInuser().getId()).getAvailableBalance() > 0.0) {
+            UserLoanDetails debitUserLoan =loanRespository.getUserAccountDetails(getLoggedInuser().getId());
+            if ( debitUserLoan != null && debitUserLoan.getAvailableBalance() > 0.0) {
                 log.info("Payment Transaction with Loan not allowed as there is Existing Loan for this user");
                 return PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_LOAN_ALLOWED_EXISTING_LOAN_PRESENT;
 
