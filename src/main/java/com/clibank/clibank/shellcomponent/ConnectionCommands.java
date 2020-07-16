@@ -6,7 +6,9 @@ import com.clibank.clibank.constants.UserCreation;
 import com.clibank.clibank.model.User;
 import com.clibank.clibank.model.UserAccountDetails;
 import com.clibank.clibank.model.UserLoanDetails;
-import com.clibank.clibank.service.ConsoleService;
+import com.clibank.clibank.service.ConsoleServiceImpl;
+import com.clibank.clibank.service.PayService;
+import com.clibank.clibank.service.TopupServiceimpl;
 import com.clibank.clibank.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,30 +25,35 @@ public class ConnectionCommands {
     private UserService userService;
 
     @Autowired
-    private ConsoleService consoleService;
+    private ConsoleServiceImpl consoleServiceImpl;
+
+    @Autowired
+    private TopupServiceimpl topupServiceimpl;
 
 
+    @Autowired
+    private PayService payService;
     @ShellMethod("Login to the Banking Cli")
     public void login(String userName) {
        UserCreation userCreation = userService.checkUserExistsElseCreateuser(userName);
         if(userCreation.equals(UserCreation.USER_ACCOUNT_CREATION_SUCCESS)){
            User user =userService.getLoggedInuser();
-            consoleService.write("Hello , %s !", user.getUserName());
-            consoleService.write("Your Balance is   %s ", userService.getAccountBalance(user.getId()) + "");
+            consoleServiceImpl.write("Hello , %s !", user.getUserName());
+            consoleServiceImpl.write("Your Balance is   %s ", userService.getAccountBalance(user.getId()) + "");
             printOwingAmount();
             printLoanAmount();
         }else if (userCreation.equals(UserCreation.USER_CREATION_SUCCESS_ACCOUNT_CREATION_FAILURE)){
             User user =userService.getLoggedInuser();
-            consoleService.write("Hello , %s !", user.getUserName());
-            consoleService.write("Failed to Create Account Retry Login After Some Time or reach to Customer Care");
+            consoleServiceImpl.write("Hello , %s !", user.getUserName());
+            consoleServiceImpl.write("Failed to Create Account Retry Login After Some Time or reach to Customer Care");
         }else if (userCreation.equals(UserCreation.USER_EXIST_IN_SYSTEM)){
             User user =userService.getLoggedInuser();
-            consoleService.write("Hello , %s !", user.getUserName());
-            consoleService.write("Your Balance is   %s ", userService.getAccountBalance(user.getId()) + "");
+            consoleServiceImpl.write("Hello , %s !", user.getUserName());
+            consoleServiceImpl.write("Your Balance is   %s ", userService.getAccountBalance(user.getId()) + "");
             printOwingAmount();
             printLoanAmount();
         }else {
-            consoleService.write("Service Not available now Retest Later" );
+            consoleServiceImpl.write("Service Not available now Retest Later" );
 
         }
 
@@ -58,29 +65,29 @@ public class ConnectionCommands {
 
         try {
             User user = userService.getLoggedInuser();
-            PaymentTransactionTypes transactionTypes = userService.topUpTransaction(user, topupAmount);
+            PaymentTransactionTypes transactionTypes = topupServiceimpl.topUpTransaction(user, topupAmount);
             if (transactionTypes.equals(PaymentTransactionTypes.TOP_UP_SUCCESS)) {
                 printBalanceAmount();
                 printLoanAmount();
 
             } else if (transactionTypes.equals(PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS)) {
-                consoleService.write("Transferred  " + userService.getTransferedAmount() + " to " + userService.getUserDetails(userService.getLoanAccountDetails(user.getId()).getPayToUserId()).getUserName());
+                consoleServiceImpl.write("Transferred  " + userService.getTransferedAmount() + " to " + userService.getUserDetails(userService.getLoanAccountDetails(user.getId()).getPayToUserId()).getUserName());
                 printBalanceAmount();
                 printLoanAmount();
             } else if (transactionTypes.equals(PaymentTransactionTypes.TOP_UP_SUCCESS_LOAN_REPAYMENT_FAILURE)) {
-                consoleService.write("Your Topup SuccessFull - Loan Payment Failure", user.getUserName());
+                consoleServiceImpl.write("Your Topup SuccessFull - Loan Payment Failure", user.getUserName());
                 printBalanceAmount();
                 printLoanAmount();
             } else if (transactionTypes.equals(PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS_UPDATE_LOAN_AMOUNT_FAILURE)) {
-                consoleService.write("Your Topup SuccessFull - Loan Payment Failure", user.getUserName());
+                consoleServiceImpl.write("Your Topup SuccessFull - Loan Payment Failure", user.getUserName());
                 printBalanceAmount();
                 printLoanAmount();
             } else {
-                consoleService.write("Toup  ");
+                consoleServiceImpl.write("Toup  ");
 
             }
         } catch (Exception e) {
-            consoleService.write("Some Thing Went wrong Please retry ");
+            consoleServiceImpl.write("Some Thing Went wrong Please retry ");
             log.info("Exception " + e);
             printBalanceAmount();
             return;
@@ -96,16 +103,16 @@ public class ConnectionCommands {
 
             if (StringUtils.hasText(creditor)) {
                 if (transactionAmount <= 0) {
-                    consoleService.write("Enter Valid Amount Greater than 0");
+                    consoleServiceImpl.write("Enter Valid Amount Greater than 0");
                     return;
                 }
                 User credUser = userService.getUserDetails(creditor);
                 if (credUser == null) {
-                    consoleService.write("Creditor Not Available in System -- Please Refer to Onboard in the Bank");
+                    consoleServiceImpl.write("Creditor Not Available in System -- Please Refer to Onboard in the Bank");
                     return;
                 }
                 if (credUser.getId() == userService.getLoggedInuser().getId()) {
-                    consoleService.write("Cannot Pay to the Same User");
+                    consoleServiceImpl.write("Cannot Pay to the Same User");
                     return;
 
                 }
@@ -113,14 +120,14 @@ public class ConnectionCommands {
                 UserAccountDetails credUserAccountDetails = userService.getAccountDetails(credUser.getId());
 
                 if (credUserAccountDetails == null) {
-                    consoleService.write("Creditor Not Available in System ");
+                    consoleServiceImpl.write("Creditor Not Available in System ");
                     return;
                 }
 
-                PaymentTransactionTypes transactionTypes = userService.pay(credUserAccountDetails, transactionAmount);
+                PaymentTransactionTypes transactionTypes = payService.pay(credUserAccountDetails, transactionAmount);
 
                 if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
-                    consoleService.write("Transferred  " + transactionAmount + " to " + credUser.getUserName());
+                    consoleServiceImpl.write("Transferred  " + transactionAmount + " to " + credUser.getUserName());
                     printBalanceAmount();
                     printLoanAmount();
                     printOwingAmount();
@@ -135,41 +142,41 @@ public class ConnectionCommands {
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.PAYMNET_AND_LOAN_SUCCESS)) {
 
-                    consoleService.write("Transferred  " + userService.getTransferedAmount() + " to " + credUser.getUserName());
+                    consoleServiceImpl.write("Transferred  " + userService.getTransferedAmount() + " to " + credUser.getUserName());
                     printBalanceAmount();
                     printLoanAmount();
                     printOwingAmount();
                     return;
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_INITIATED_WITH_LOAN_AND_PAYMENT_SUCCESS_LOAN_FAILURE)) {
-                    consoleService.write("Transferred  " + transactionAmount + " to " + credUser.getUserName());
+                    consoleServiceImpl.write("Transferred  " + transactionAmount + " to " + credUser.getUserName());
                     printBalanceAmount();
                     printLoanAmount();
                     printOwingAmount();
                     return;
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_DEBIT_BALANCE)) {
-                    consoleService.write("Balance is Zero Cannot Pay ");
+                    consoleServiceImpl.write("Balance is Zero Cannot Pay ");
                     printBalanceAmount();
                     printOwingAmount();
                     return;
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_LOAN_ALLOWED_EXISTING_LOAN_PRESENT)) {
 
-                    consoleService.write("Already Have a Existing Loan -- Cannot do Payment -- Please clear your Loan Amount " + userService.getLoanAccountDetails(userService.getLoggedInuser().getId()).getAvailableBalance());
+                    consoleServiceImpl.write("Already Have a Existing Loan -- Cannot do Payment -- Please clear your Loan Amount " + userService.getLoanAccountDetails(userService.getLoggedInuser().getId()).getAvailableBalance());
                     printBalanceAmount();
                     printOwingAmount();
                     return;
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.LOAN_REPAY_DISPUTE_PRENDING)) {
 
-                    consoleService.write("Cannot Pay as there is a Existing Loan Reversal");
+                    consoleServiceImpl.write("Cannot Pay as there is a Existing Loan Reversal");
                     printBalanceAmount();
                     printOwingAmount();
                     return;
 
                 } else {
-                    consoleService.write("Transaction Failure -- Cannot Topup");
+                    consoleServiceImpl.write("Transaction Failure -- Cannot Topup");
                     printBalanceAmount();
                     printOwingAmount();
                     return;
@@ -177,13 +184,13 @@ public class ConnectionCommands {
 
 
             } else {
-                consoleService.write("Please Provide Valid User ");
+                consoleServiceImpl.write("Please Provide Valid User ");
                 return;
             }
 
 
         } catch (Exception e) {
-            consoleService.write("Some Thing Went wrong Please retry ");
+            consoleServiceImpl.write("Some Thing Went wrong Please retry ");
             printBalanceAmount();
             return;
         }
@@ -198,7 +205,7 @@ public class ConnectionCommands {
     @ShellMethod("Logout of the Banking Cli")
     public void logout() {
         this.userService.disconnect();
-        this.consoleService.write("Logged out ");
+        this.consoleServiceImpl.write("Logged out ");
     }
 
     Availability logoutAvailability() {
@@ -221,7 +228,7 @@ public class ConnectionCommands {
         Double loanAmount = userLoanDetails.getAvailableBalance();
 
         if (loanAmount > 0) {
-            consoleService.write("Owing  " + loanAmount + " to " + userService.getUserDetails(userLoanDetails.getPayToUserId()).getUserName());
+            consoleServiceImpl.write("Owing  " + loanAmount + " to " + userService.getUserDetails(userLoanDetails.getPayToUserId()).getUserName());
         }
 
     }
@@ -235,14 +242,14 @@ public class ConnectionCommands {
         }
         Double loanAmount = userLoanDetails.getAvailableBalance();
         if (loanAmount > 0) {
-            consoleService.write("Owing  " + loanAmount + " from " + userService.getUserDetails(userLoanDetails.getUserid()).getUserName());
+            consoleServiceImpl.write("Owing  " + loanAmount + " from " + userService.getUserDetails(userLoanDetails.getUserid()).getUserName());
         }
 
     }
 
     private void printBalanceAmount() {
 
-        consoleService.write("Your Balance is   %s ", userService.getAccountBalance(userService.getLoggedInuser().getId()) + "");
+        consoleServiceImpl.write("Your Balance is   %s ", userService.getAccountBalance(userService.getLoggedInuser().getId()) + "");
     }
 
 

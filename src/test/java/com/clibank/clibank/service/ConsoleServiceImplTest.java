@@ -4,7 +4,7 @@ package com.clibank.clibank.service;
 import org.junit.After;
 import org.junit.Before;
 
-class ConsoleServiceTest {
+class ConsoleServiceImplTest {
 
     @Before
     void setUp() {
