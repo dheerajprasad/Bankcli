@@ -6,5 +6,5 @@ public interface UserRepository {
 
     User getUserByName(String userName);
     User getUserByid(int userId);
-    String createuser(String userName);
+    int createuser(String userName);
 }

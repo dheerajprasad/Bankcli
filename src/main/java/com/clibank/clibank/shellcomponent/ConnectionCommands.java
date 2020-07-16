@@ -2,7 +2,7 @@ package com.clibank.clibank.shellcomponent;
 
 
 import com.clibank.clibank.constants.PaymentTransactionTypes;
-import com.clibank.clibank.model.TransactionDetails;
+import com.clibank.clibank.constants.UserCreation;
 import com.clibank.clibank.model.User;
 import com.clibank.clibank.model.UserAccountDetails;
 import com.clibank.clibank.model.UserLoanDetails;
@@ -28,11 +28,28 @@ public class ConnectionCommands {
 
     @ShellMethod("Login to the Banking Cli")
     public void login(String userName) {
-        User user = userService.checkUserExistsElseCreateuser(userName);
-        consoleService.write("Hello , %s !", user.getUserName());
-        consoleService.write("Your Balance is   %s ", userService.getAccountBalance(user.getId()) + "");
-        printOwingAmount();
-        printLoanAmount();
+       UserCreation userCreation = userService.checkUserExistsElseCreateuser(userName);
+        if(userCreation.equals(UserCreation.USER_ACCOUNT_CREATION_SUCCESS)){
+           User user =userService.getLoggedInuser();
+            consoleService.write("Hello , %s !", user.getUserName());
+            consoleService.write("Your Balance is   %s ", userService.getAccountBalance(user.getId()) + "");
+            printOwingAmount();
+            printLoanAmount();
+        }else if (userCreation.equals(UserCreation.USER_CREATION_SUCCESS_ACCOUNT_CREATION_FAILURE)){
+            User user =userService.getLoggedInuser();
+            consoleService.write("Hello , %s !", user.getUserName());
+            consoleService.write("Failed to Create Account Retry Login After Some Time or reach to Customer Care");
+        }else if (userCreation.equals(UserCreation.USER_EXIST_IN_SYSTEM)){
+            User user =userService.getLoggedInuser();
+            consoleService.write("Hello , %s !", user.getUserName());
+            consoleService.write("Your Balance is   %s ", userService.getAccountBalance(user.getId()) + "");
+            printOwingAmount();
+            printLoanAmount();
+        }else {
+            consoleService.write("Service Not available now Retest Later" );
+
+        }
+
 
     }
 

@@ -2,6 +2,7 @@ package com.clibank.clibank.service;
 
 import com.clibank.clibank.constants.PaymentTransactionTypes;
 import com.clibank.clibank.constants.TransactionTypes;
+import com.clibank.clibank.constants.UserCreation;
 import com.clibank.clibank.model.TransactionDetails;
 import com.clibank.clibank.model.UserLoanDetails;
 import com.clibank.clibank.repository.AccountRespository;
@@ -99,16 +100,39 @@ public class UserService {
         return users.stream().map(this::usernames).collect(Collectors.toList());
     }
 
-    public User checkUserExistsElseCreateuser(String userName) {
+    public UserCreation checkUserExistsElseCreateuser(String userName) {
 
-        User user = userRepository.getUserByName(userName);
-        if (user == null) {
-            userRepository.createuser(userName);
-            user = userRepository.getUserByName(userName);
-            accountRespository.createAccount(user.getId(), user.getUserName());
+        try {
+            User user = userRepository.getUserByName(userName);
+            if (user == null) {
+                int createUserResult = userRepository.createuser(userName);
+                if (createUserResult == 1) {
+                    user = userRepository.getUserByName(userName);
+                    this.loggedInUser = user;
+                    this.Connect(user);
+                    int accountCreationResult = accountRespository.createAccount(user.getId(), user.getUserName());
+                    if (accountCreationResult == 1) {
+                        return UserCreation.USER_ACCOUNT_CREATION_SUCCESS;
+                    } else {
+                        return UserCreation.USER_CREATION_SUCCESS_ACCOUNT_CREATION_FAILURE;
+                    }
+
+                } else {
+                    return UserCreation.USER_CREATION_FAILURE;
+                }
+            } else {
+                user = userRepository.getUserByName(userName);
+                this.Connect(user);
+                return UserCreation.USER_EXIST_IN_SYSTEM;
+            }
+
+
+        } catch (Exception e) {
+            log.error("checkUserExistsElseCreateuser creation Exception {}", e);
+            return UserCreation.USER_ACCOUNT_CREATION_EXCEPTION;
+
         }
-        this.Connect(user);
-        return user;
+
 
     }
 
@@ -179,7 +203,7 @@ public class UserService {
 
             topupUserAccntDtls = accountRespository.getUserAccountDetails(topupUser.getId());
 
-            log.info("Top up for the User is Successful Balance is " + topupUserAccntDtls.getAvailableBalance() );
+            log.info("Top up for the User is Successful Balance is " + topupUserAccntDtls.getAvailableBalance());
             // Check Loan Transaction Present
 
             log.info("Checking Loan Transaction Present for the User {} and amount is {}", topupUser.getUserName());
@@ -212,14 +236,14 @@ public class UserService {
                     updatedLoanAmount = Math.abs(loanAmount - transactionAmount);
                     creditAccountUpdatedBalance = creditAccountOriginalBalance + topupAmount;
                 }
-               log.info("updatedDebitBalance {} , creditAccountUpdatedBalance {} ,transactionAmount {} ", updatedDebitBalance, creditAccountUpdatedBalance, transactionAmount);
+                log.info("updatedDebitBalance {} , creditAccountUpdatedBalance {} ,transactionAmount {} ", updatedDebitBalance, creditAccountUpdatedBalance, transactionAmount);
                 //update isLoanRepayment Allowed  to false for the user -- Reset Back once Loan Repayment Transaction is Successfull
                 PaymentTransactionTypes transactionTypesPayment = createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.TOP_INITIATED_LOAN_REPAYMENT);
                 //Loan Repayment Transaction
                 if (transactionTypesPayment.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
                     // Topup  Payment Success
                     log.info("Topup  Payment Success -- Loan Repayment Success");
-                    this.tranferedAmount=transactionAmount;
+                    this.tranferedAmount = transactionAmount;
                     //update loan amount for topup User
                     //   int loanUpdateTranStatus = accountRespository.updateLoanAmountAndLoanRepayment(topupUser.getId(), updatedLoanAmount, "TRUE", topupUserAccntDtls.getVersion());
                     int loanrevertTranStatus = loanRespository.updateBalanceAndEarMarkAmount(topupUser.getId(), updatedLoanAmount, originalEarmarkAmount, topupUserLoanDetails.getVersion());
@@ -231,13 +255,13 @@ public class UserService {
                         //Consider the above payment  transaction as normal payment from topup user to loaner transaction as as loan Payment failed
                         // Requires Batch or Manual Handling to Change the Above transaction Payment type from TOP_INITIATED_LOAN_REPAYMENT to PAYMENT
                         return PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS_UPDATE_LOAN_AMOUNT_FAILURE;
-                   }
+                    }
                 } else {
                     // Topup Success -- Loan Repayment Failure
                     log.info("Topup Success -- Loan Repayment Failure");
                     // revert loan transaction
                     return PaymentTransactionTypes.TOP_UP_SUCCESS_LOAN_REPAYMENT_FAILURE;
-           }
+                }
 
             } else {
                 log.info("No Loan Transaction or Loan Repayment Not Allowed Available for this User -- Top up Successfull ");
@@ -371,8 +395,8 @@ public class UserService {
 
         } else {
             // Do not Allow Loan Transaction if there is already a existing Loan //Assumption
-            UserLoanDetails debitUserLoan =loanRespository.getUserAccountDetails(getLoggedInuser().getId());
-            if ( debitUserLoan != null && debitUserLoan.getAvailableBalance() > 0.0) {
+            UserLoanDetails debitUserLoan = loanRespository.getUserAccountDetails(getLoggedInuser().getId());
+            if (debitUserLoan != null && debitUserLoan.getAvailableBalance() > 0.0) {
                 log.info("Payment Transaction with Loan not allowed as there is Existing Loan for this user");
                 return PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_LOAN_ALLOWED_EXISTING_LOAN_PRESENT;
 

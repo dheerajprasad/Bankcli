@@ -39,11 +39,10 @@ public class UserRepositoryimpl implements UserRepository {
 
     }
 
-    public String createuser(String userName){
+    public int createuser(String userName){
         Map<String,String> params = new HashMap<>();
         params.put(USERNAME,userName);
-        namedParameterJdbcTemplate.update(CREATE_USER,params);
-        return userName;
+        return namedParameterJdbcTemplate.update(CREATE_USER,params);
 
     }
 
