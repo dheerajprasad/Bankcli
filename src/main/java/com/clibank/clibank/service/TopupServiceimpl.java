@@ -31,6 +31,9 @@ public class TopupServiceimpl implements TopupService{
 
     @Autowired UserService userService;
 
+    @Autowired
+    private  TransactionService transactionService;
+
 
     public PaymentTransactionTypes topUpTransaction(User topupUser, Double topupAmount) {
 
@@ -47,7 +50,7 @@ public class TopupServiceimpl implements TopupService{
         //Do a Topup -Payment from Pool to TopupUser
 
 
-        PaymentTransactionTypes transactionTypes = userService.createPaymentTransaction(debitAccountOriginalBalance, updatedDebitBalance, creditAccountOriginalBalance, creditUpdatedAccountBalance, topupAmount, poolAcntuser, topupUser, poolAccntDtls, topupUserAccntDtls, TransactionTypes.TOPUP);
+        PaymentTransactionTypes transactionTypes = transactionService.createPaymentTransaction(debitAccountOriginalBalance, updatedDebitBalance, creditAccountOriginalBalance, creditUpdatedAccountBalance, topupAmount, poolAcntuser, topupUser, poolAccntDtls, topupUserAccntDtls, TransactionTypes.TOPUP);
 
         if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
 
@@ -88,7 +91,7 @@ public class TopupServiceimpl implements TopupService{
                 }
                 log.info("updatedDebitBalance {} , creditAccountUpdatedBalance {} ,transactionAmount {} ", updatedDebitBalance, creditAccountUpdatedBalance, transactionAmount);
                 //update isLoanRepayment Allowed  to false for the user -- Reset Back once Loan Repayment Transaction is Successfull
-                PaymentTransactionTypes transactionTypesPayment = userService.createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.TOP_INITIATED_LOAN_REPAYMENT);
+                PaymentTransactionTypes transactionTypesPayment = transactionService.createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.TOP_INITIATED_LOAN_REPAYMENT);
                 //Loan Repayment Transaction
                 if (transactionTypesPayment.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
                     // Topup  Payment Success

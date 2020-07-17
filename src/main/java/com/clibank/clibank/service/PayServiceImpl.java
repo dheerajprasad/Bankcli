@@ -34,6 +34,9 @@ public class PayServiceImpl  implements  PayService{
     @Autowired
     UserService userService;
 
+    @Autowired
+    private  TransactionService transactionService;
+
 
     public PaymentTransactionTypes pay(UserAccountDetails creditAccountDetails, Double transactionAmount) {
 
@@ -188,14 +191,14 @@ public class PayServiceImpl  implements  PayService{
         Double creditUpdatedAccountBalance = creditAccountOrignialBalance + debitAccountOrignialBalance;
 
         //  Initiate the Payment Transaction --
-        PaymentTransactionTypes payTransactionType = userService.createPaymentTransaction(debitAccountOrignialBalance, updatedDebitBalance, creditAccountOrignialBalance, creditUpdatedAccountBalance, updatedTransactionAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER_WITH_LOAN);
+        PaymentTransactionTypes payTransactionType = transactionService.createPaymentTransaction(debitAccountOrignialBalance, updatedDebitBalance, creditAccountOrignialBalance, creditUpdatedAccountBalance, updatedTransactionAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER_WITH_LOAN);
 
         if (payTransactionType.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
             log.info("Payment Transaction Success");
             userService.setTranferedAmount(updatedTransactionAmount);
             //  Payment Transaction Success -- Initiate the Loan Transaction
 
-            PaymentTransactionTypes loanTransactionTypes = userService.createLoanTransaction(userLoanDetails, DebitLoanBalanceToCreditor);
+            PaymentTransactionTypes loanTransactionTypes = transactionService.createLoanTransaction(userLoanDetails, DebitLoanBalanceToCreditor);
             if (loanTransactionTypes.equals(PaymentTransactionTypes.LOAN_TRANSACTION_SUCCESS)) {
                 log.info("Payment Transaction Success --Loan Transaction Success -");
                 return PaymentTransactionTypes.PAYMNET_AND_LOAN_SUCCESS;
@@ -249,7 +252,7 @@ public class PayServiceImpl  implements  PayService{
         // updated latest Balance = creditaccountpresentbalance + transactionAmount
         Double creditUpdatedAccountBalance = creditAccountOrignialBalance + transactionAmount;
 
-        PaymentTransactionTypes transactionTypes = userService.createPaymentTransaction(debitAccountOrignialBalance, updatedDebitBalance, creditAccountOrignialBalance, creditUpdatedAccountBalance, transactionAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER);
+        PaymentTransactionTypes transactionTypes = transactionService.createPaymentTransaction(debitAccountOrignialBalance, updatedDebitBalance, creditAccountOrignialBalance, creditUpdatedAccountBalance, transactionAmount, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER);
 
         return transactionTypes;
     }
