@@ -13,9 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 @Slf4j
 @Component
-public class TransactionServiceImpl implements  TransactionService{
+public class TransactionServiceImpl implements TransactionService {
     @Autowired
     UserRepositoryimpl userRepository;
 
@@ -28,6 +29,7 @@ public class TransactionServiceImpl implements  TransactionService{
     @Autowired
     LoanRespository loanRespository;
 
+    @Transactional
     public PaymentTransactionTypes createPaymentTransaction(Double debitAccountOrignialBalance, Double
             updatedDebitBalance, Double creditAccountOrignialBalance, Double creditUpdatedAccountBalance, Double
                                                                     transactionAmount, User debitUser, User creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails
@@ -157,7 +159,6 @@ public class TransactionServiceImpl implements  TransactionService{
 
 
     }
-
 
 
     @Transactional
