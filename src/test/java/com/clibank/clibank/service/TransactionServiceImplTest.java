@@ -64,9 +64,6 @@ public class TransactionServiceImplTest {
         UserAccountDetails creditAccountDetails = getAccount();
         creditAccountDetails.setAvailableBalance(1.);
         when(accountRespository.updateBalanceAndEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyInt())).thenThrow(NullPointerException.class);
-        when(accountRespository.updateBalance(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(1);
-        when(transactionRepository.createTransaction(Mockito.any(), Mockito.anyDouble(), Mockito.any(), Mockito.any())).thenReturn(1);
-        when(accountRespository.updateEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(1);
         Assert.assertEquals( PaymentTransactionTypes.PAYMENT_TRANCTION_FAILURE, transactionService.createPaymentTransaction(10.00, 8.00, 10.00, 12.00, 2.00, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER));
 
     }

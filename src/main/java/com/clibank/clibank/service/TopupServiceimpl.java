@@ -53,7 +53,7 @@ public class TopupServiceimpl implements TopupService {
 
         PaymentTransactionTypes transactionTypes = transactionService.createPaymentTransaction(debitAccountOriginalBalance, updatedDebitBalance, creditAccountOriginalBalance, creditUpdatedAccountBalance, topupAmount, poolAcntuser, topupUser, poolAccntDtls, topupUserAccntDtls, TransactionTypes.TOPUP);
 
-        if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
+        if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) ) {
 
             topupUserAccntDtls = accountRespository.getUserAccountDetails(topupUser.getId());
 
@@ -94,7 +94,7 @@ public class TopupServiceimpl implements TopupService {
                 //update isLoanRepayment Allowed  to false for the user -- Reset Back once Loan Repayment Transaction is Successfull
                 PaymentTransactionTypes transactionTypesPayment = transactionService.createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.TOP_INITIATED_LOAN_REPAYMENT);
                 //Loan Repayment Transaction
-                if (transactionTypesPayment.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
+                if (transactionTypesPayment.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
                     // Topup  Payment Success
                     log.info("Topup  Payment Success -- Loan Repayment Success");
                     userService.setTranferedAmount(transactionAmount);
