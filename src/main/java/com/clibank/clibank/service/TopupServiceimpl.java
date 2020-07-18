@@ -36,7 +36,7 @@ public class TopupServiceimpl implements TopupService {
     @Autowired
     private TransactionService transactionService;
 
-    @Transactional
+
     public PaymentTransactionTypes topUpTransaction(User topupUser, Double topupAmount) {
 
         // Toup up the Account -- Source Pool Account --

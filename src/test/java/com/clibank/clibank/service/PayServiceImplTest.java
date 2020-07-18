@@ -49,7 +49,9 @@ public class PayServiceImplTest {
     public void testPayBalanceZero() {
 
         when(userService.getLoggedInuser()).thenReturn(getUser());
-        when(accountRespository.getUserAccountDetails(Mockito.anyInt())).thenReturn(getAccount());
+        UserAccountDetails  userAccountDetails = getAccount();
+        userAccountDetails.setAvailableBalance(0.0);
+        when(accountRespository.getUserAccountDetails(Mockito.anyInt())).thenReturn(userAccountDetails);
         when(userRepository.getUserByid(Mockito.anyInt())).thenReturn(getUser());
         Assert.assertEquals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_DEBIT_BALANCE, payService.pay(getAccount(), 1.0));
     }

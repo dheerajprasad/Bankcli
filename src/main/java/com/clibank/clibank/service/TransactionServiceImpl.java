@@ -29,7 +29,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Autowired
     LoanRespository loanRespository;
 
-
+    @Transactional
     public PaymentTransactionTypes createPaymentTransaction(Double debitAccountOrignialBalance, Double
             updatedDebitBalance, Double creditAccountOrignialBalance, Double creditUpdatedAccountBalance, Double
                                                                     transactionAmount, User debitUser, User creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails
@@ -90,9 +90,6 @@ public class TransactionServiceImpl implements TransactionService {
             // Loan upadate Success and Loan Transaction Creation is Success
             //release Loan earmark after Loan upadate Success and Loan Transaction Creation is Success
             int revertEarMarkAmount = loanRespository.updateEarMarkAmount(userLoanDetails.getUserid(), originalEarMarkLoanAmount, userLoanDetails.getVersion());
-
-            log.info("release Loan Lock after Loan upadate Success and Loan Transaction Creation is Success");
-
 
         } catch (Exception e) {
             log.info("Exception Occured  in createLoanTransaction {} ", e);

@@ -59,11 +59,12 @@ public class PayServiceImpl implements PayService {
         if ((paymentTransactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_FAILURE))) {
             return PaymentTransactionTypes.PAYMENT_TO_LOAN_FAILURE;
         }
-        if((paymentTransactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_ONLY_SUCCESS))){
+        if ((paymentTransactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_ONLY_SUCCESS))) {
             return PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS;
         }
         // Loan and Extra Payment Required
         if (paymentTransactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS)) {
+            // Send Remaining Amount
             transactionAmount = clearExistingLoanRes.getRemainingTranamt();
         }
 
@@ -89,7 +90,7 @@ public class PayServiceImpl implements PayService {
 
 
     @Transactional
-    public ClearExistingLoanRes  clearExistingLoan(User debitUser, UserAccountDetails debitAccountDetails, User creditUser, UserAccountDetails creditAccountDetails, Double transactionAmount) {
+    public ClearExistingLoanRes clearExistingLoan(User debitUser, UserAccountDetails debitAccountDetails, User creditUser, UserAccountDetails creditAccountDetails, Double transactionAmount) {
 
         ClearExistingLoanRes clearExistingLoanRes = new ClearExistingLoanRes();
         PaymentTransactionTypes paymentTransactionTypes = null;
@@ -177,9 +178,7 @@ public class PayServiceImpl implements PayService {
     }
 
     @Transactional
-    public PaymentTransactionTypes payTranAmountMoreThanBalance(User debitUser, User
-            creditUser, UserAccountDetails
-                                                                        debitAccountDetails, UserAccountDetails creditAccountDetails, Double transactionAmount) {
+    public PaymentTransactionTypes payTranAmountMoreThanBalance(User debitUser, User creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails creditAccountDetails, Double transactionAmount) {
 
 
         UserLoanDetails userLoanDetails = checkLoanAccountExistsElseCreate(debitUser, creditUser);

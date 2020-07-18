@@ -83,7 +83,7 @@ public class ConnectionCommands {
                 printBalanceAmount();
                 printLoanAmount();
             } else {
-                consoleServiceImpl.write("Toup  ");
+                consoleServiceImpl.write("Transaction Failed  ");
 
             }
         } catch (Exception e) {
@@ -126,7 +126,7 @@ public class ConnectionCommands {
 
                 PaymentTransactionTypes transactionTypes = payService.pay(credUserAccountDetails, transactionAmount);
 
-                if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) || transactionTypes.equals(PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_SUCCESS_TRNRECORD_CREATE_SUCCESS_REMOVE_DEBIT_EAR_MARK_FAIURE_TRAN_SUCCESS)) {
+                if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) ) {
                     consoleServiceImpl.write("Transferred  " + transactionAmount + " to " + credUser.getUserName());
                     printBalanceAmount();
                     printLoanAmount();
@@ -253,12 +253,5 @@ public class ConnectionCommands {
     }
 
 
-    /*
-    @ShellMethod("Print the list of Users")
-    public void print(){
-        String joined = String.join(" -- ",  userService.getusernames());
-        this.consoleService.write("List of Users in System today  %s. ", joined);
-    }
-*/
 
 }

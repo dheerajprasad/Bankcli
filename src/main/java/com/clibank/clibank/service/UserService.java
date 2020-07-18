@@ -131,6 +131,15 @@ public class UserService {
                 }
             } else {
                 user = userRepository.getUserByName(userName);
+                UserAccountDetails userAccount =accountRespository.getUserAccountDetails(user.getId());
+            if(userAccount==null){
+                int accountCreationResult = accountRespository.createAccount(user.getId(), user.getUserName());
+                if (accountCreationResult == 1) {
+                    return UserCreation.USER_ACCOUNT_CREATION_SUCCESS;
+                } else {
+                    return UserCreation.USER_CREATION_SUCCESS_ACCOUNT_CREATION_FAILURE;
+                }
+            }
                 this.Connect(user);
                 return UserCreation.USER_EXIST_IN_SYSTEM;
             }
