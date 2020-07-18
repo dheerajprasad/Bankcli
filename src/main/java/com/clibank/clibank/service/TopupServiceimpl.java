@@ -12,10 +12,11 @@ import com.clibank.clibank.repository.UserRepositoryimpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-public class TopupServiceimpl implements TopupService{
+public class TopupServiceimpl implements TopupService {
 
     @Autowired
     UserRepositoryimpl userRepository;
@@ -29,12 +30,13 @@ public class TopupServiceimpl implements TopupService{
     @Autowired
     LoanRespository loanRespository;
 
-    @Autowired UserService userService;
+    @Autowired
+    UserService userService;
 
     @Autowired
-    private  TransactionService transactionService;
+    private TransactionService transactionService;
 
-
+    @Transactional
     public PaymentTransactionTypes topUpTransaction(User topupUser, Double topupAmount) {
 
         // Toup up the Account -- Source Pool Account --
@@ -134,7 +136,6 @@ public class TopupServiceimpl implements TopupService{
 
 
     }
-
 
 
 }
