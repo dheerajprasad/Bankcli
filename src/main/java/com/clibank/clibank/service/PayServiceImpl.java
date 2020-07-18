@@ -2,6 +2,7 @@ package com.clibank.clibank.service;
 
 import com.clibank.clibank.constants.PaymentTransactionTypes;
 import com.clibank.clibank.constants.TransactionTypes;
+import com.clibank.clibank.model.ClearExistingLoanRes;
 import com.clibank.clibank.model.User;
 import com.clibank.clibank.model.UserAccountDetails;
 import com.clibank.clibank.model.UserLoanDetails;
@@ -13,10 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-public class PayServiceImpl  implements  PayService{
+public class PayServiceImpl implements PayService {
 
 
     @Autowired
@@ -35,7 +37,7 @@ public class PayServiceImpl  implements  PayService{
     UserService userService;
 
     @Autowired
-    private  TransactionService transactionService;
+    private TransactionService transactionService;
 
 
     public PaymentTransactionTypes pay(UserAccountDetails creditAccountDetails, Double transactionAmount) {
@@ -46,102 +48,23 @@ public class PayServiceImpl  implements  PayService{
 
         // Do not Allow Payment if Balance is Zero //Assumption
         if (debitAccountDetails.getAvailableBalance() <= 0.0) {
-
             log.info("debitAccount Balance Less than 0 ");
             return PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_DEBIT_BALANCE;
         }
 
+        ClearExistingLoanRes clearExistingLoanRes = clearExistingLoan(debitUser, debitAccountDetails, creditUser, creditAccountDetails, transactionAmount);
+        PaymentTransactionTypes paymentTransactionTypes = clearExistingLoanRes.getPaymentTransactionTypes();
 
-        // Check whether the Creditor has Loan Associated
-        UserLoanDetails creditUserLoanDetails = loanRespository.getUserAccountDetails(creditAccountDetails.getUserid());
-        if (creditUserLoanDetails != null && creditUserLoanDetails.getAvailableBalance() > 0) {
-            log.info("Creditor has  Previous Loan");
-            log.info("Checking if the Loan is Associated  With Present payer");
-
-            if (creditUserLoanDetails.getPayToUserId() == debitUser.getId()) {
-
-                log.info("Payer has existing Loan with the user " + creditUserLoanDetails);
-
-                Double originalLoanAmount = creditUserLoanDetails.getAvailableBalance();
-                Double updatedLoanAmount = 0.0;
-                Double OriginalTranAmount = transactionAmount;
-                Double orinialEarMarkAmount = creditUserLoanDetails.getEarMarkAmount();
-                if (transactionAmount <= creditUserLoanDetails.getAvailableBalance()) {
-                    log.info("transactionAmount  {} <  debitUserLoanDetails.getAvailableBalance() {}", transactionAmount, creditUserLoanDetails.getAvailableBalance());
-                    // update Loan amount for the debitor
-                    updatedLoanAmount = originalLoanAmount - transactionAmount;
-                } else {
-                    log.info("transactionAmount  {} >  debitUserLoanDetails.getAvailableBalance() {}", transactionAmount, creditUserLoanDetails.getAvailableBalance());
-                    updatedLoanAmount = 0.0;
-                    log.info("Updating the Transaction Amount transactionAmount {} to transactionAmount- originalLoanAmount {}", transactionAmount, transactionAmount - originalLoanAmount);
-                }
-                log.info("updating updatedLoanAmount {}", updatedLoanAmount);
-                Double updaedEarmarkAmount = orinialEarMarkAmount + (originalLoanAmount - updatedLoanAmount);
-                log.info("updating updaedEarmarkAmount {}", updaedEarmarkAmount);
-                //    int accountUpdateStatus = accountRespository.updateLoanAmountAndLoanRepayment(creditAccountDetails.getUserid(), updatedLoanAmount, "FALSE", creditAccountDetails.getVersion());
-                int accountUpdateStatus = loanRespository.updateBalanceAndEarMarkAmount(creditUserLoanDetails.getUserid(), updatedLoanAmount, orinialEarMarkAmount + originalLoanAmount - updatedLoanAmount, creditUserLoanDetails.getVersion());
-                if (accountUpdateStatus == 1) {
-                    log.info("updating updatedLoanAmount -- Transaction Success");
-                    // Create a Payment Record
-                    debitAccountDetails = accountRespository.getUserAccountDetails(debitUser.getId());
-                    Double debitAccountOriginalbalance = debitAccountDetails.getAvailableBalance();
-
-                    // Doube transaction Amount
-                    Double loanTransactionAmount = originalLoanAmount - updatedLoanAmount;
-                    log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction ");
-                    int loanTransactionUpdateStatus = transactionRepository.createTransactionLoan(creditUserLoanDetails, loanTransactionAmount, TransactionTypes.PAYMENT_INITIATED_PAY_TO_LOAN.name());
-                    if (loanTransactionUpdateStatus == 1) {
-                        log.info("updating updatedLoanAmount -- Transaction Success -- Creating Loan Transaction Record -- Success");
-                        //revert earmark
-                        int loanEarMarkrevertStatus = loanRespository.updateEarMarkAmount(creditAccountDetails.getUserid(), orinialEarMarkAmount, creditAccountDetails.getVersion());
-                        if (loanEarMarkrevertStatus == 1) {
-                            // Loan  revertion Success
-                            if (OriginalTranAmount <= originalLoanAmount) {
-                                // revert the Loan Lock again
-                                log.info("updating updatedLoanAmount -- Transaction Success -- Creating a  Transaction record -- Success --loanEarMarkrevertStatus--success");
-                                return PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS;
-                            } else {
-                                log.info("OriginalTranAmount >  originalLoanAmountupdating :::: updatedLoanAmount -- Transaction Success -- Creating a  Transaction record -- Success --loanEarMarkrevertStatus--success");
-                                // Updating the Transaction Amount to Proceed after Loan Transaction
-                                log.info("Continue Flow to the Payments");
-                                transactionAmount = transactionAmount - originalLoanAmount;
-
-                            }
-
-                        } else {
-
-                            log.info("updating updatedLoanAmount -- Transaction Success -- Creating a  Transaction record -- Success --loanEarMarkrevertStatus--Failure");
-                            // Loan Earmark revertion Failure
-
-                            return PaymentTransactionTypes.LOAN_TRANSFER_TO_CREDITOR_SUCESS_TRAN_CREATE_SUCCESS_LOAN_EARMARK_REVERT_FAILURE;
-                            // Batch or Manual Intervention required to remove the earmark amount and add it to loan amount
-                        }
-
-                    } else {
-                        log.info("updating updatedLoanAmount -- Transaction Success -- Creating a  Transaction record-- Failure");
-
-                        // revert the update LoanAmount
-                        int accountRevertStatus = loanRespository.updateBalanceAndEarMarkAmount(creditUserLoanDetails.getUserid(), originalLoanAmount, orinialEarMarkAmount, creditAccountDetails.getVersion());
-                        if (accountRevertStatus == 1) {
-                            log.info("updating updatedLoanAmount -- Transaction Success -- Creating a  Transaction -- Failure -- Reverting Loan Amount Success");
-                            return PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS_TRANSACTION_CREATION_FAILURE;
-                        } else {
-                            log.info("updating updatedLoanAmount -- Transaction Success -- Creating a  Transaction -- Failure -- Reverting Loan Amount Failure");
-                            return PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS_TRANSACTION_CREATION_FAILURE_REVERT_LOANAMOUNT_FAILURE;
-                            // Batch or Manual Intervention required to release the ear mark amount and
-                        }
-                    }
-                } else {
-                    log.info("updating updatedLoanAmount -- Failure ");
-                    return PaymentTransactionTypes.LOAN_REPAY_UPDATE_LOAN_AMOUNT_FAILURE;
-                }
-                //create a transaction record
-            } else {
-                log.info("Loan is not Associated  With Payer");
-            }
-        } else {
-            log.info("Credit User has no loan  ");
-
+        // only Loan Payment Exists for user
+        if ((paymentTransactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_FAILURE))) {
+            return PaymentTransactionTypes.PAYMENT_TO_LOAN_FAILURE;
+        }
+        if((paymentTransactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_ONLY_SUCCESS))){
+            return PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS;
+        }
+        // Loan and Extra Payment Required
+        if (paymentTransactionTypes.equals(PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS)) {
+            transactionAmount = clearExistingLoanRes.getRemainingTranamt();
         }
 
         //Check Balance >= Transaction Amount
@@ -164,8 +87,99 @@ public class PayServiceImpl  implements  PayService{
 
     }
 
-    public PaymentTransactionTypes payTranAmountMoreThanBalance(User debitUser, User creditUser, UserAccountDetails
-            debitAccountDetails, UserAccountDetails creditAccountDetails, Double transactionAmount) {
+
+    @Transactional
+    public ClearExistingLoanRes  clearExistingLoan(User debitUser, UserAccountDetails debitAccountDetails, User creditUser, UserAccountDetails creditAccountDetails, Double transactionAmount) {
+
+        ClearExistingLoanRes clearExistingLoanRes = new ClearExistingLoanRes();
+        PaymentTransactionTypes paymentTransactionTypes = null;
+        boolean isException = false;
+        try {
+            // Check whether the Creditor has Loan Associated
+            UserLoanDetails creditUserLoanDetails = loanRespository.getUserAccountDetails(creditAccountDetails.getUserid());
+            if (creditUserLoanDetails != null && creditUserLoanDetails.getAvailableBalance() > 0) {
+                log.info("Creditor has  Previous Loan");
+                log.info("Checking if the Loan is Associated  With Present payer");
+
+                if (creditUserLoanDetails.getPayToUserId() == debitUser.getId()) {
+
+                    log.info("Payer has existing Loan with the user " + creditUserLoanDetails);
+
+                    Double originalLoanAmount = creditUserLoanDetails.getAvailableBalance();
+                    Double updatedLoanAmount = 0.0;
+                    Double OriginalTranAmount = transactionAmount;
+                    Double orinialEarMarkAmount = creditUserLoanDetails.getEarMarkAmount();
+                    if (transactionAmount <= creditUserLoanDetails.getAvailableBalance()) {
+                        log.info("transactionAmount  {} <  debitUserLoanDetails.getAvailableBalance() {}", transactionAmount, creditUserLoanDetails.getAvailableBalance());
+                        // update Loan amount for the debitor
+                        updatedLoanAmount = originalLoanAmount - transactionAmount;
+                    } else {
+                        log.info("transactionAmount  {} >  debitUserLoanDetails.getAvailableBalance() {}", transactionAmount, creditUserLoanDetails.getAvailableBalance());
+                        updatedLoanAmount = 0.0;
+                        log.info("Updating the Transaction Amount transactionAmount {} to transactionAmount- originalLoanAmount {}", transactionAmount, transactionAmount - originalLoanAmount);
+                    }
+                    log.info("updating updatedLoanAmount {}", updatedLoanAmount);
+                    Double updaedEarmarkAmount = orinialEarMarkAmount + (originalLoanAmount - updatedLoanAmount);
+                    log.info("updating updaedEarmarkAmount {}", updaedEarmarkAmount);
+                    //    int accountUpdateStatus = accountRespository.updateLoanAmountAndLoanRepayment(creditAccountDetails.getUserid(), updatedLoanAmount, "FALSE", creditAccountDetails.getVersion());
+                    loanRespository.updateBalanceAndEarMarkAmount(creditUserLoanDetails.getUserid(), updatedLoanAmount, orinialEarMarkAmount + originalLoanAmount - updatedLoanAmount, creditUserLoanDetails.getVersion());
+
+                    log.info("updating updatedLoanAmount -- Transaction Success");
+                    // Create a Payment Record
+                    debitAccountDetails = accountRespository.getUserAccountDetails(debitUser.getId());
+                    Double debitAccountOriginalbalance = debitAccountDetails.getAvailableBalance();
+
+                    // Doube transaction Amount
+                    Double loanTransactionAmount = originalLoanAmount - updatedLoanAmount;
+                    log.info("updating updatedLoanAmount -- Transaction Success -- Creating a Payment Transaction ");
+                    transactionRepository.createTransactionLoan(creditUserLoanDetails, loanTransactionAmount, TransactionTypes.PAYMENT_INITIATED_PAY_TO_LOAN.name());
+
+                    log.info("updating updatedLoanAmount -- Transaction Success -- Creating Loan Transaction Record -- Success");
+                    //revert earmark
+                    loanRespository.updateEarMarkAmount(creditAccountDetails.getUserid(), orinialEarMarkAmount, creditAccountDetails.getVersion());
+                    // Loan  revertion Success
+                    if (OriginalTranAmount <= originalLoanAmount) {
+                        // revert the Loan Lock again
+                        log.info("updating updatedLoanAmount -- Transaction Success -- Creating a  Transaction record -- Success --loanEarMarkrevertStatus--success");
+                        paymentTransactionTypes = PaymentTransactionTypes.PAYMENT_TO_LOAN_ONLY_SUCCESS;
+                    } else {
+                        log.info("OriginalTranAmount >  originalLoanAmountupdating :::: updatedLoanAmount -- Transaction Success -- Creating a  Transaction record -- Success --loanEarMarkrevertStatus--success");
+                        // Updating the Transaction Amount to Proceed after Loan Transaction
+                        log.info("Continue Flow to the Payments");
+                        transactionAmount = transactionAmount - originalLoanAmount;
+                        paymentTransactionTypes = PaymentTransactionTypes.PAYMENT_TO_LOAN_SUCCESS;
+                    }
+
+                } else {
+                    log.info("Loan is not Associated  With Payer");
+                    paymentTransactionTypes = PaymentTransactionTypes.NO_LOAN_ASSOCIATED;
+                }
+            } else {
+                log.info("Credit User has no loan  ");
+                paymentTransactionTypes = PaymentTransactionTypes.NO_LOAN_ASSOCIATED;
+
+            }
+        } catch (Exception e) {
+            log.info("clearExistingLoan Exception  ", e);
+            isException = true;
+        } finally {
+            if (isException) {
+                clearExistingLoanRes.setPaymentTransactionTypes(PaymentTransactionTypes.PAYMENT_TO_LOAN_FAILURE);
+                return clearExistingLoanRes;
+
+            } else {
+                clearExistingLoanRes.setPaymentTransactionTypes(paymentTransactionTypes);
+                clearExistingLoanRes.setRemainingTranamt(transactionAmount);
+                return clearExistingLoanRes;
+            }
+
+        }
+    }
+
+    @Transactional
+    public PaymentTransactionTypes payTranAmountMoreThanBalance(User debitUser, User
+            creditUser, UserAccountDetails
+                                                                        debitAccountDetails, UserAccountDetails creditAccountDetails, Double transactionAmount) {
 
 
         UserLoanDetails userLoanDetails = checkLoanAccountExistsElseCreate(debitUser, creditUser);
@@ -238,7 +252,7 @@ public class PayServiceImpl  implements  PayService{
 
     }
 
-
+    @Transactional
     public PaymentTransactionTypes payTranAmountLessOrEqualToBalance(User debitUser, User
             creditUser, UserAccountDetails debitAccountDetails, UserAccountDetails creditAccountDetails, Double
                                                                              transactionAmount) {
