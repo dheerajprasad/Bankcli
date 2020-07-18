@@ -51,12 +51,12 @@ public class TransactionServiceImplTest {
         UserAccountDetails creditAccountDetails = getAccount();
         creditAccountDetails.setAvailableBalance(1.);
         when(accountRespository.updateBalanceAndEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(0);
-        Assert.assertEquals(PaymentTransactionTypes.DEBIT_TRANFAILURE, transactionService.createPaymentTransaction(10.00, 8.00, 10.00, 12.00, 2.00, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER));
+        Assert.assertEquals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS, transactionService.createPaymentTransaction(10.00, 8.00, 10.00, 12.00, 2.00, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER));
 
     }
 
     @Test
-    public void test_createAllSuccess() {
+    public void test_createException() {
 
         User debitUser = getUser();
         User creditUser = getUser();
@@ -64,27 +64,17 @@ public class TransactionServiceImplTest {
         debitAccountDetails.setAvailableBalance(10.);
         UserAccountDetails creditAccountDetails = getAccount();
         creditAccountDetails.setAvailableBalance(1.);
-        when(accountRespository.updateBalanceAndEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(1).thenReturn(1).thenReturn(1);
+        when(accountRespository.updateBalanceAndEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyInt())).thenThrow(NullPointerException.class);
         when(accountRespository.updateBalance(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(1);
         when(transactionRepository.createTransaction(Mockito.any(), Mockito.anyDouble(), Mockito.any(), Mockito.any())).thenReturn(1);
         when(accountRespository.updateEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(1);
-        Assert.assertEquals( PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS, transactionService.createPaymentTransaction(10.00, 8.00, 10.00, 12.00, 2.00, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER));
+        Assert.assertEquals( PaymentTransactionTypes.PAYMENT_TRANCTION_FAILURE, transactionService.createPaymentTransaction(10.00, 8.00, 10.00, 12.00, 2.00, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER));
 
     }
 
     @Test
-    public void test_debitsuccessCreditFailurerevertSuccess() {
+    public void test_PaymentFailure() {
 
-        User debitUser = getUser();
-        User creditUser = getUser();
-        UserAccountDetails debitAccountDetails = getAccount();
-        debitAccountDetails.setAvailableBalance(10.);
-        UserAccountDetails creditAccountDetails = getAccount();
-        creditAccountDetails.setAvailableBalance(1.);
-        when(accountRespository.updateBalanceAndEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(1).thenReturn(1).thenReturn(1);
-        when(accountRespository.updateBalance(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(0);
-        when(accountRespository.updateEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(1);
-        Assert.assertEquals( PaymentTransactionTypes.DEBIT_SUCCESS_CREDIT_FAILURE, transactionService.createPaymentTransaction(10.00, 8.00, 10.00, 12.00, 2.00, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER));
 
     }
 

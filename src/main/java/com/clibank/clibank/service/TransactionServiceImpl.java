@@ -71,7 +71,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     }
 
-
+    @Transactional
     public PaymentTransactionTypes createLoanTransaction(UserLoanDetails userLoanDetails, Double loanAmount) {
         boolean isException = false;
         try {
