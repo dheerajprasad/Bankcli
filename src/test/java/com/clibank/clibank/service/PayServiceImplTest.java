@@ -1,7 +1,6 @@
 package com.clibank.clibank.service;
 
 import com.clibank.clibank.constants.PaymentTransactionTypes;
-import com.clibank.clibank.constants.TransactionTypes;
 import com.clibank.clibank.model.User;
 import com.clibank.clibank.model.UserAccountDetails;
 import com.clibank.clibank.model.UserLoanDetails;
@@ -17,9 +16,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Date;
-
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -35,7 +31,7 @@ public class PayServiceImplTest {
     private TransactionRepositoryImpl transactionRepository;
 
     @Mock
-    UserService userService;
+    UserServiceImpl userService;
 
     @InjectMocks
     PayServiceImpl payService;

@@ -9,7 +9,7 @@ import com.clibank.clibank.model.UserLoanDetails;
 import com.clibank.clibank.service.ConsoleServiceImpl;
 import com.clibank.clibank.service.PayService;
 import com.clibank.clibank.service.TopupServiceimpl;
-import com.clibank.clibank.service.UserService;
+import com.clibank.clibank.service.UserServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.Availability;
@@ -22,7 +22,7 @@ import org.springframework.util.StringUtils;
 public class ConnectionCommands {
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @Autowired
     private ConsoleServiceImpl consoleServiceImpl;

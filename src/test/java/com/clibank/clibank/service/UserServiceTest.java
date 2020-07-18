@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -28,12 +27,13 @@ public class UserServiceTest {
     private TransactionRepositoryImpl transactionRepository;
 
     @InjectMocks
-    UserService userService;
+    UserServiceImpl userService;
 
 
     @Test
     public void test_login_ExistUsersuccess() {
         when(userRepository.getUserByName(Mockito.any())).thenReturn(getUser());
+        when(accountRespository.getUserAccountDetails(Mockito.anyInt())).thenReturn(getAccount());
         Assert.assertEquals(UserCreation.USER_EXIST_IN_SYSTEM, userService.checkUserExistsElseCreateuser("asdas"));
 
     }

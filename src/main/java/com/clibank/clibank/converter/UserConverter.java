@@ -1,7 +1,7 @@
 package com.clibank.clibank.converter;
 
 import com.clibank.clibank.model.User;
-import com.clibank.clibank.service.UserService;
+import com.clibank.clibank.service.UserServiceImpl;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -9,11 +9,11 @@ import java.util.regex.Pattern;
 @Component
 public class UserConverter implements Converter<String, User> {
 
-    public UserConverter(UserService userService) {
+    public UserConverter(UserServiceImpl userService) {
         this.userService = userService;
     }
 
-    private final UserService userService;
+    private final UserServiceImpl userService;
 
     private final Pattern pattern = Pattern.compile("\\(#(\\d+)\\).*");
 

@@ -1,16 +1,16 @@
 package com.clibank.clibank.promptprovider;
 
-import com.clibank.clibank.service.UserService;
+import com.clibank.clibank.service.UserServiceImpl;
 import org.jline.utils.AttributedString;
 import org.springframework.shell.jline.PromptProvider;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ConnectedPromptProvider implements PromptProvider {
-    private final UserService userService;
+    private final UserServiceImpl userService;
 
 
-    public ConnectedPromptProvider(UserService userService) {
+    public ConnectedPromptProvider(UserServiceImpl userService) {
         this.userService = userService;
     }
 

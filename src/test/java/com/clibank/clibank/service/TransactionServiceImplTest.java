@@ -17,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -33,7 +32,7 @@ public class TransactionServiceImplTest {
     private TransactionRepositoryImpl transactionRepository;
 
     @Mock
-    UserService userService;
+    UserServiceImpl userService;
 
     @InjectMocks
     PayServiceImpl payService;

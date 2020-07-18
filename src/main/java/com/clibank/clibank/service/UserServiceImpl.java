@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class UserService {
+public class UserServiceImpl implements  Userservice {
     @Autowired
     UserRepositoryimpl userRepository;
 
@@ -109,7 +109,7 @@ public class UserService {
         return users.stream().map(this::usernames).collect(Collectors.toList());
     }
 
-    public UserCreation checkUserExistsElseCreateuser(String userName) {
+        public UserCreation checkUserExistsElseCreateuser(String userName) {
 
         try {
             User user = userRepository.getUserByName(userName);

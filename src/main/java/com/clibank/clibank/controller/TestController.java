@@ -1,7 +1,7 @@
 package com.clibank.clibank.controller;
 
 import com.clibank.clibank.model.User;
-import com.clibank.clibank.service.UserService;
+import com.clibank.clibank.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.stereotype.controller;
 //import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +12,7 @@ import java.util.List;
 //@RestController
 public class TestController {
     @Autowired
-    UserService userService;
+    UserServiceImpl userService;
 
   //  @GetMapping("/getUsers")
     public List<User> getusers(){

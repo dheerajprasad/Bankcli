@@ -34,7 +34,7 @@ public class PayServiceImpl implements PayService {
     LoanRespository loanRespository;
 
     @Autowired
-    UserService userService;
+    UserServiceImpl userService;
 
     @Autowired
     private TransactionService transactionService;
