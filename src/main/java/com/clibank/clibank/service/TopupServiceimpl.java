@@ -53,7 +53,7 @@ public class TopupServiceimpl implements TopupService {
 
         PaymentTransactionTypes transactionTypes = transactionService.createPaymentTransaction(debitAccountOriginalBalance, updatedDebitBalance, creditAccountOriginalBalance, creditUpdatedAccountBalance, topupAmount, poolAcntuser, topupUser, poolAccntDtls, topupUserAccntDtls, TransactionTypes.TOPUP);
 
-        if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS) ) {
+        if (transactionTypes.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
 
             topupUserAccntDtls = accountRespository.getUserAccountDetails(topupUser.getId());
 
@@ -62,10 +62,10 @@ public class TopupServiceimpl implements TopupService {
 
             log.info("Checking Loan Transaction Present for the User {} and amount is {}", topupUser.getUserName());
 
-            if (topupUserLoanDetails != null && topupUserLoanDetails.getAvailableBalance() > 0.0) {
-                log.info("Loan Transaction Present for the User {} " + topupUserLoanDetails.getAvailableBalance());
+            if (topupUserLoanDetails != null && topupUserLoanDetails.getBalance() > 0.0) {
+                log.info("Loan Transaction Present for the User {} " + topupUserLoanDetails.getBalance());
                 //  Check Loan Transaction Present -YES -- Get Loan Details
-                Double loanAmount = topupUserLoanDetails.getAvailableBalance();
+                Double loanAmount = topupUserLoanDetails.getBalance();
                 log.info("Loan Transaction Present for the User loanAmount -- {}", loanAmount);
                 // Debit TopupUser Credit Credituser
                 UserAccountDetails creditUserAccountDetails = accountRespository.getUserAccountDetails(topupUserLoanDetails.getPayToUserId());
@@ -90,51 +90,64 @@ public class TopupServiceimpl implements TopupService {
                     updatedLoanAmount = Math.abs(loanAmount - transactionAmount);
                     creditAccountUpdatedBalance = creditAccountOriginalBalance + topupAmount;
                 }
-                log.info("updatedDebitBalance {} , creditAccountUpdatedBalance {} ,transactionAmount {} ", updatedDebitBalance, creditAccountUpdatedBalance, transactionAmount);
-                //update isLoanRepayment Allowed  to false for the user -- Reset Back once Loan Repayment Transaction is Successfull
-                PaymentTransactionTypes transactionTypesPayment = transactionService.createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.TOP_INITIATED_LOAN_REPAYMENT);
-                //Loan Repayment Transaction
-                if (transactionTypesPayment.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
-                    // Topup  Payment Success
-                    log.info("Topup  Payment Success -- Loan Repayment Success");
-                    userService.setTranferedAmount(transactionAmount);
-                    //update loan amount for topup User
-                    //   int loanUpdateTranStatus = accountRespository.updateLoanAmountAndLoanRepayment(topupUser.getId(), updatedLoanAmount, "TRUE", topupUserAccntDtls.getVersion());
-                    int loanrevertTranStatus = loanRespository.updateBalanceAndEarMarkAmount(topupUser.getId(), updatedLoanAmount, originalEarmarkAmount, topupUserLoanDetails.getVersion());
-                    if (loanrevertTranStatus == 1) {
-                        log.info("Topup  Payment Success -- Loan Repayment Success -- update Loan Amount Success");
-                        return PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS;
+                int loanupdateTranStatus = loanRespository.updateBalanceAndEarMarkAmount(topupUser.getId(), updatedLoanAmount, originalEarmarkAmount + transactionAmount, topupUserLoanDetails.getVersion());
+                if (loanupdateTranStatus == 1) {
+                    log.info("updatedDebitBalance {} , creditAccountUpdatedBalance {} ,transactionAmount {} ", updatedDebitBalance, creditAccountUpdatedBalance, transactionAmount);
+                    PaymentTransactionTypes transactionTypesPayment = transactionService.createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.TOP_INITIATED_LOAN_REPAYMENT);
+                    //Loan Repayment Transaction
+                    if (transactionTypesPayment.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
+                        // Topup  Payment Success
+                        log.info("Topup  Payment Success -- Loan Repayment Success");
+                        userService.setTranferedAmount(transactionAmount);
+                        //update loan amount for topup User
+                        int loanrevertTranStatus = loanRespository.updateEarMarkAmount(topupUser.getId(), originalEarmarkAmount, topupUserLoanDetails.getVersion());
+                        if (loanrevertTranStatus == 1) {
+                            log.info("Topup  Payment Success -- Loan Repayment Success -- update Loan Amount Success");
+                            return PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS;
+                        } else {
+                            log.info("Topup  Payment Success -- Loan Repayment Success -- update Loan Ear mark Amount Failure");
+                            //Batch or Manual intervention required to uodate the release the ear mark amount
+                            return PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS_UPDATE_LOAN_AMOUNT_FAILURE;
+                        }
                     } else {
-                        log.info("Topup  Payment Success -- Loan Repayment Success -- update Loan Amount Failure");
-                        //Consider the above payment  transaction as normal payment from topup user to loaner transaction as as loan Payment failed
-                        // Requires Batch or Manual Handling to Change the Above transaction Payment type from TOP_INITIATED_LOAN_REPAYMENT to PAYMENT
-                        return PaymentTransactionTypes.TOP_UP_SUCCESS_LOANPAYMENT_SUCCESS_UPDATE_LOAN_AMOUNT_FAILURE;
+                        // Topup Success -- Loan Repayment Failure
+                        log.info("Topup Success -- Loan Repayment Failure");
+                        // revert loan transaction
+                        int loanRevertTran = loanRespository.updateBalanceAndEarMarkAmount(topupUser.getId(), loanAmount, originalEarmarkAmount, topupUserLoanDetails.getVersion());
+                        if(loanRevertTran==1){
+                            log.info("Topup Success -- Loan Repayment Failure -- Loan Revert Success");
+                            return PaymentTransactionTypes.TOP_UP_SUCCESS_LOAN_REPAYMENT_FAILURE;
+                        }else{
+                            log.info("Topup Success -- Loan Repayment Failure -- Loan Revert Failure -- Manual or Batch Handling to remove the Ear mark and add back to balance");
+                            return PaymentTransactionTypes.TOP_UP_SUCCESS_LOAN_REPAYMENT_FAILURE;
+                        }
+
+
                     }
-                } else {
-                    // Topup Success -- Loan Repayment Failure
+                } else{
                     log.info("Topup Success -- Loan Repayment Failure");
                     // revert loan transaction
                     return PaymentTransactionTypes.TOP_UP_SUCCESS_LOAN_REPAYMENT_FAILURE;
+
+                    }
+                } else {
+                    log.info("No Loan Transaction or Loan Repayment Not Allowed Available for this User -- Top up Successfull ");
+
+                    return PaymentTransactionTypes.TOP_UP_SUCCESS;
+
                 }
 
-            } else {
-                log.info("No Loan Transaction or Loan Repayment Not Allowed Available for this User -- Top up Successfull ");
 
-                return PaymentTransactionTypes.TOP_UP_SUCCESS;
+            } else {
+
+                log.info("Top up for the User Failed");
+
+                return PaymentTransactionTypes.TOP_UP_FAILURE;
 
             }
 
-
-        } else {
-
-            log.info("Top up for the User Failed");
-
-            return PaymentTransactionTypes.TOP_UP_FAILURE;
 
         }
 
 
     }
-
-
-}

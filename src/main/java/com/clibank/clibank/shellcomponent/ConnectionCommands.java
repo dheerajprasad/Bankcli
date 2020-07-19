@@ -163,7 +163,7 @@ public class ConnectionCommands {
 
                 } else if (transactionTypes.equals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_LOAN_ALLOWED_EXISTING_LOAN_PRESENT)) {
 
-                    consoleServiceImpl.write("Already Have a Existing Loan -- Cannot do Payment -- Please clear your Loan Amount " + userService.getLoanAccountDetails(userService.getLoggedInuser().getId()).getAvailableBalance());
+                    consoleServiceImpl.write("Already Have a Existing Loan -- Cannot do Payment -- Please clear your Loan Amount " + userService.getLoanAccountDetails(userService.getLoggedInuser().getId()).getBalance());
                     printBalanceAmount();
                     printOwingAmount();
                     return;
@@ -225,7 +225,7 @@ public class ConnectionCommands {
         if (userLoanDetails == null) {
             return;
         }
-        Double loanAmount = userLoanDetails.getAvailableBalance();
+        Double loanAmount = userLoanDetails.getBalance();
 
         if (loanAmount > 0) {
             consoleServiceImpl.write("Owing  " + loanAmount + " to " + userService.getUserDetails(userLoanDetails.getPayToUserId()).getUserName());
@@ -240,7 +240,7 @@ public class ConnectionCommands {
         if (userLoanDetails == null) {
             return;
         }
-        Double loanAmount = userLoanDetails.getAvailableBalance();
+        Double loanAmount = userLoanDetails.getBalance();
         if (loanAmount > 0) {
             consoleServiceImpl.write("Owing  " + loanAmount + " from " + userService.getUserDetails(userLoanDetails.getUserid()).getUserName());
         }

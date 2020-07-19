@@ -75,7 +75,7 @@ public class TransactionServiceImpl implements TransactionService {
     public PaymentTransactionTypes createLoanTransaction(UserLoanDetails userLoanDetails, Double loanAmount) {
         boolean isException = false;
         try {
-            Double originalLoanAmountforDebitUser = userLoanDetails.getAvailableBalance();
+            Double originalLoanAmountforDebitUser = userLoanDetails.getBalance();
             User debituser = userRepository.getUserByid(userLoanDetails.getUserid());
             Double originalEarMarkLoanAmount = userLoanDetails.getEarMarkAmount();
             Double updatedLoanAmount = originalLoanAmountforDebitUser + loanAmount;

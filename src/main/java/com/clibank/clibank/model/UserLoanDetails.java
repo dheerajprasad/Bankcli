@@ -16,7 +16,6 @@ public class UserLoanDetails {
     private Double balance;
     private Double earMarkAmount;
     private Integer payToUserId;
-    private Double availableBalance;
     private Integer version;
     private Date created_date;
     private Date updated_date;

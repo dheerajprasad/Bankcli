@@ -76,7 +76,7 @@ public class PayServiceImpl implements PayService {
         } else {
             // Do not Allow Loan Transaction if there is already a existing Loan //Assumption
             UserLoanDetails debitUserLoan = loanRespository.getUserAccountDetails(userService.getLoggedInuser().getId());
-            if (debitUserLoan != null && debitUserLoan.getAvailableBalance() > 0.0) {
+            if (debitUserLoan != null && debitUserLoan.getBalance() > 0.0) {
                 log.info("Payment Transaction with Loan not allowed as there is Existing Loan for this user");
                 return PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_LOAN_ALLOWED_EXISTING_LOAN_PRESENT;
 
@@ -98,7 +98,7 @@ public class PayServiceImpl implements PayService {
         try {
             // Check whether the Creditor has Loan Associated
             UserLoanDetails creditUserLoanDetails = loanRespository.getUserAccountDetails(creditAccountDetails.getUserid());
-            if (creditUserLoanDetails != null && creditUserLoanDetails.getAvailableBalance() > 0) {
+            if (creditUserLoanDetails != null && creditUserLoanDetails.getBalance() > 0) {
                 log.info("Creditor has  Previous Loan");
                 log.info("Checking if the Loan is Associated  With Present payer");
 
@@ -106,16 +106,16 @@ public class PayServiceImpl implements PayService {
 
                     log.info("Payer has existing Loan with the user " + creditUserLoanDetails);
 
-                    Double originalLoanAmount = creditUserLoanDetails.getAvailableBalance();
+                    Double originalLoanAmount = creditUserLoanDetails.getBalance();
                     Double updatedLoanAmount = 0.0;
                     Double OriginalTranAmount = transactionAmount;
                     Double orinialEarMarkAmount = creditUserLoanDetails.getEarMarkAmount();
-                    if (transactionAmount <= creditUserLoanDetails.getAvailableBalance()) {
-                        log.info("transactionAmount  {} <  debitUserLoanDetails.getAvailableBalance() {}", transactionAmount, creditUserLoanDetails.getAvailableBalance());
+                    if (transactionAmount <= creditUserLoanDetails.getBalance()) {
+                        log.info("transactionAmount  {} <  debitUserLoanDetails.getAvailableBalance() {}", transactionAmount, creditUserLoanDetails.getBalance());
                         // update Loan amount for the debitor
                         updatedLoanAmount = originalLoanAmount - transactionAmount;
                     } else {
-                        log.info("transactionAmount  {} >  debitUserLoanDetails.getAvailableBalance() {}", transactionAmount, creditUserLoanDetails.getAvailableBalance());
+                        log.info("transactionAmount  {} >  debitUserLoanDetails.getAvailableBalance() {}", transactionAmount, creditUserLoanDetails.getBalance());
                         updatedLoanAmount = 0.0;
                         log.info("Updating the Transaction Amount transactionAmount {} to transactionAmount- originalLoanAmount {}", transactionAmount, transactionAmount - originalLoanAmount);
                     }
@@ -188,7 +188,7 @@ public class PayServiceImpl implements PayService {
         //debitAccountOrignialBalance
         Double debitAccountOrignialBalance = debitAccountDetails.getAvailableBalance();
         // debit Account Original LoanAmount
-        Double debitAccountOriginalLoanAmount = userLoanDetails.getAvailableBalance();
+        Double debitAccountOriginalLoanAmount = userLoanDetails.getBalance();
         // debit Amount from debitAccount
         Double creditAccountOrignialBalance = creditAccountDetails.getAvailableBalance();
         // updated latest Balance = creditaccountpresentbalance + transactionAmount

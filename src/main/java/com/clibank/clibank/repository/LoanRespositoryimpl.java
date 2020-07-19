@@ -95,9 +95,8 @@ public class LoanRespositoryimpl implements LoanRespository{
         userLoanDetails.setId(rs.getInt("ID"));
         userLoanDetails.setUserid(rs.getInt("USERID"));
         userLoanDetails.setAccount_number(rs.getString("account_number"));
-        userLoanDetails.setBalance(rs.getDouble("BALANCE"));
+        userLoanDetails.setBalance(rs.getDouble("BALANCE" ));
         userLoanDetails.setEarMarkAmount(rs.getDouble("EARMARKAMOUNT"));
-        userLoanDetails.setAvailableBalance(userLoanDetails.getBalance()-userLoanDetails.getEarMarkAmount());
         userLoanDetails.setPayToUserId(rs.getInt("PAY_TO_USERID"));
         userLoanDetails.setVersion(rs.getInt("VERSION"));
         userLoanDetails.setCreated_date(rs.getObject("CREATED_DATE", Date.class));

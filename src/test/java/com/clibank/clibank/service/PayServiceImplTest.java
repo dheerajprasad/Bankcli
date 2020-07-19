@@ -109,7 +109,6 @@ public class PayServiceImplTest {
         userLoanDetails.setAccount_number("a");
         userLoanDetails.setBalance(0.0);
         userLoanDetails.setEarMarkAmount(0.0);
-        userLoanDetails.setAvailableBalance(10.0);
         userLoanDetails.setPayToUserId(2);
         userLoanDetails.setVersion(1);
 
