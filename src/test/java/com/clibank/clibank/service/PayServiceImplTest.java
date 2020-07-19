@@ -40,12 +40,11 @@ public class PayServiceImplTest {
     private TransactionService transactionService;
 
 
-
     @Test
     public void testPayBalanceZero() {
 
         when(userService.getLoggedInuser()).thenReturn(getUser());
-        UserAccountDetails  userAccountDetails = getAccount();
+        UserAccountDetails userAccountDetails = getAccount();
         userAccountDetails.setBalance(0.0);
         when(accountRespository.getUserAccountDetails(Mockito.anyInt())).thenReturn(userAccountDetails);
         when(userRepository.getUserByid(Mockito.anyInt())).thenReturn(getUser());
@@ -62,8 +61,8 @@ public class PayServiceImplTest {
         UserAccountDetails creditAccountDetails = getAccount();
         creditAccountDetails.setBalance(1.);
         payService.payTranAmountLessOrEqualToBalance(debitUser, creditUser, debitAccountDetails, creditAccountDetails, 1.0);
-        verify(transactionService,times(1)).createPaymentTransaction( Mockito.any(),
-                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),Mockito.any(), Mockito.any(), Mockito.any(),
+        verify(transactionService, times(1)).createPaymentTransaction(Mockito.any(),
+                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
                 Mockito.any(), Mockito.any());
 
     }
@@ -74,8 +73,10 @@ public class PayServiceImplTest {
         when(userService.getLoggedInuser()).thenReturn(getUser());
         when(accountRespository.getUserAccountDetails(Mockito.anyInt())).thenReturn(getAccount());
         when(userRepository.getUserByid(Mockito.anyInt())).thenReturn(getUser());
+        UserLoanDetails userLoanDetails = getLoanAccountDetails();
+        userLoanDetails.setBalance(10.);
         when(loanRespository.getUserAccountDetails(Mockito.anyInt())).thenReturn(null).thenReturn(getLoanAccountDetails());
-        Assert.assertEquals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_LOAN_ALLOWED_EXISTING_LOAN_PRESENT, payService.pay(getAccount(), 100.));
+        Assert.assertEquals(PaymentTransactionTypes.LOAN_ACCOUNT_CREATION_FAILURE, payService.pay(getAccount(), 100.));
     }
 
 

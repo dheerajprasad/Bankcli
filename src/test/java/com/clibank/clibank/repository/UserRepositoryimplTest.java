@@ -36,7 +36,7 @@ public class UserRepositoryimplTest {
 
     public void test_createUser(){
 
-        Assert.assertEquals("TESTCREATE",respository.createuser("TESTCREATE"));
+        Assert.assertEquals(1,respository.createuser("TESTCREATE"));
     }
 
 }
