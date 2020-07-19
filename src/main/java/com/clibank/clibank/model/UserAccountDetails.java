@@ -15,7 +15,6 @@ public class UserAccountDetails {
     private String account_number;
     private Double balance;
     private Double earMarkAmount;
-    private Double availableBalance;
     private Integer version;
     private Date created_date;
     private Date updated_date;

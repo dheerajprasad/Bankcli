@@ -173,7 +173,7 @@ public class UserServiceImpl implements  Userservice {
     public Double getAccountBalance(int userid) {
 
         UserAccountDetails userAccountDetails = accountRespository.getUserAccountDetails(userid);
-        return userAccountDetails.getAvailableBalance();
+        return userAccountDetails.getBalance();
 
     }
 

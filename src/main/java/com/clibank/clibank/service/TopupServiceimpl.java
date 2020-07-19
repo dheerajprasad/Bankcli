@@ -44,9 +44,9 @@ public class TopupServiceimpl implements TopupService {
         UserLoanDetails topupUserLoanDetails = loanRespository.getUserAccountDetails(topupUser.getId());
         UserAccountDetails poolAccntDtls = userService.getPoolAccountDetails();
         User poolAcntuser = userService.getPoolUserDetails();
-        Double debitAccountOriginalBalance = poolAccntDtls.getAvailableBalance();
+        Double debitAccountOriginalBalance = poolAccntDtls.getBalance();
         Double updatedDebitBalance = debitAccountOriginalBalance - topupAmount;
-        Double creditAccountOriginalBalance = topupUserAccntDtls.getAvailableBalance();
+        Double creditAccountOriginalBalance = topupUserAccntDtls.getBalance();
         Double creditUpdatedAccountBalance = creditAccountOriginalBalance + topupAmount;
         //Do a Topup -Payment from Pool to TopupUser
 
@@ -57,7 +57,7 @@ public class TopupServiceimpl implements TopupService {
 
             topupUserAccntDtls = accountRespository.getUserAccountDetails(topupUser.getId());
 
-            log.info("Top up for the User is Successful Balance is " + topupUserAccntDtls.getAvailableBalance());
+            log.info("Top up for the User is Successful Balance is " + topupUserAccntDtls.getBalance());
             // Check Loan Transaction Present
 
             log.info("Checking Loan Transaction Present for the User {} and amount is {}", topupUser.getUserName());
@@ -69,15 +69,15 @@ public class TopupServiceimpl implements TopupService {
                 log.info("Loan Transaction Present for the User loanAmount -- {}", loanAmount);
                 // Debit TopupUser Credit Credituser
                 UserAccountDetails creditUserAccountDetails = accountRespository.getUserAccountDetails(topupUserLoanDetails.getPayToUserId());
-                creditAccountOriginalBalance = creditUserAccountDetails.getAvailableBalance();
+                creditAccountOriginalBalance = creditUserAccountDetails.getBalance();
                 User creditUser = userRepository.getUserByid(topupUserLoanDetails.getPayToUserId());
                 Double updatedLoanAmount = 0.0;
                 Double creditAccountUpdatedBalance = 0.0;
                 Double transactionAmount = 0.0;
                 Double originalEarmarkAmount = topupUserLoanDetails.getEarMarkAmount();
-                if (topupUserAccntDtls.getAvailableBalance() >= loanAmount) {
+                if (topupUserAccntDtls.getBalance() >= loanAmount) {
                     // account Balance Greater than Loan -- create Payment transaction and update loan amount to 0
-                    updatedDebitBalance = topupUserAccntDtls.getAvailableBalance() - loanAmount;
+                    updatedDebitBalance = topupUserAccntDtls.getBalance() - loanAmount;
                     creditAccountUpdatedBalance = creditAccountOriginalBalance + loanAmount;
                     transactionAmount = loanAmount;
                     updatedLoanAmount = 0.0;
@@ -86,14 +86,14 @@ public class TopupServiceimpl implements TopupService {
                     // account Balance Less than Loan -- create Payment transaction and update Balance to Zero
                     log.info("account Balance Less than Loan -- create Payment transaction and update Balance to Zero");
                     updatedDebitBalance = 0.0;
-                    transactionAmount = topupUserAccntDtls.getAvailableBalance();
+                    transactionAmount = topupUserAccntDtls.getBalance();
                     updatedLoanAmount = Math.abs(loanAmount - transactionAmount);
                     creditAccountUpdatedBalance = creditAccountOriginalBalance + topupAmount;
                 }
                 int loanupdateTranStatus = loanRespository.updateBalanceAndEarMarkAmount(topupUser.getId(), updatedLoanAmount, originalEarmarkAmount + transactionAmount, topupUserLoanDetails.getVersion());
                 if (loanupdateTranStatus == 1) {
                     log.info("updatedDebitBalance {} , creditAccountUpdatedBalance {} ,transactionAmount {} ", updatedDebitBalance, creditAccountUpdatedBalance, transactionAmount);
-                    PaymentTransactionTypes transactionTypesPayment = transactionService.createPaymentTransaction(topupUserAccntDtls.getAvailableBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.TOP_INITIATED_LOAN_REPAYMENT);
+                    PaymentTransactionTypes transactionTypesPayment = transactionService.createPaymentTransaction(topupUserAccntDtls.getBalance(), updatedDebitBalance, creditAccountOriginalBalance, creditAccountUpdatedBalance, transactionAmount, topupUser, creditUser, topupUserAccntDtls, creditUserAccountDetails, TransactionTypes.TOP_INITIATED_LOAN_REPAYMENT);
                     //Loan Repayment Transaction
                     if (transactionTypesPayment.equals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS)) {
                         // Topup  Payment Success

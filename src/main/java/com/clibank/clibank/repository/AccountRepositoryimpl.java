@@ -94,7 +94,6 @@ public class AccountRepositoryimpl implements AccountRespository {
         userAccountDetails.setAccount_number(rs.getString("account_number"));
         userAccountDetails.setBalance(rs.getDouble("BALANCE"));
         userAccountDetails.setEarMarkAmount(rs.getDouble("EARMARKAMOUNT"));
-        userAccountDetails.setAvailableBalance(userAccountDetails.getBalance()-userAccountDetails.getEarMarkAmount());
         userAccountDetails.setVersion(rs.getInt("VERSION"));
         userAccountDetails.setCreated_date(rs.getObject("CREATED_DATE", Date.class));
         userAccountDetails.setUpdated_date(rs.getObject("UPDATED_DATE", Date.class));

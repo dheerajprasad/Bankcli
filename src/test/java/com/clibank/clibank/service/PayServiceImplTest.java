@@ -46,7 +46,7 @@ public class PayServiceImplTest {
 
         when(userService.getLoggedInuser()).thenReturn(getUser());
         UserAccountDetails  userAccountDetails = getAccount();
-        userAccountDetails.setAvailableBalance(0.0);
+        userAccountDetails.setBalance(0.0);
         when(accountRespository.getUserAccountDetails(Mockito.anyInt())).thenReturn(userAccountDetails);
         when(userRepository.getUserByid(Mockito.anyInt())).thenReturn(getUser());
         Assert.assertEquals(PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_DEBIT_BALANCE, payService.pay(getAccount(), 1.0));
@@ -58,9 +58,9 @@ public class PayServiceImplTest {
         User debitUser = getUser();
         User creditUser = getUser();
         UserAccountDetails debitAccountDetails = getAccount();
-        debitAccountDetails.setAvailableBalance(10.);
+        debitAccountDetails.setBalance(10.);
         UserAccountDetails creditAccountDetails = getAccount();
-        creditAccountDetails.setAvailableBalance(1.);
+        creditAccountDetails.setBalance(1.);
         payService.payTranAmountLessOrEqualToBalance(debitUser, creditUser, debitAccountDetails, creditAccountDetails, 1.0);
         verify(transactionService,times(1)).createPaymentTransaction( Mockito.any(),
                 Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),Mockito.any(), Mockito.any(), Mockito.any(),
@@ -95,7 +95,7 @@ public class PayServiceImplTest {
         userAccountDetails.setEarMarkAmount(0.);
         userAccountDetails.setUserid(1);
         userAccountDetails.setVersion(1);
-        userAccountDetails.setAvailableBalance(10.);
+        userAccountDetails.setBalance(10.);
 
         return userAccountDetails;
     }

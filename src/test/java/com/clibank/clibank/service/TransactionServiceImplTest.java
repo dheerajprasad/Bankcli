@@ -46,9 +46,9 @@ public class TransactionServiceImplTest {
         User debitUser = getUser();
         User creditUser = getUser();
         UserAccountDetails debitAccountDetails = getAccount();
-        debitAccountDetails.setAvailableBalance(10.);
+        debitAccountDetails.setBalance(10.);
         UserAccountDetails creditAccountDetails = getAccount();
-        creditAccountDetails.setAvailableBalance(1.);
+        creditAccountDetails.setBalance(1.);
         when(accountRespository.updateBalanceAndEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyInt())).thenReturn(0);
         Assert.assertEquals(PaymentTransactionTypes.PAYMENT_TRANCTION_SUCESS, transactionService.createPaymentTransaction(10.00, 8.00, 10.00, 12.00, 2.00, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER));
 
@@ -60,9 +60,9 @@ public class TransactionServiceImplTest {
         User debitUser = getUser();
         User creditUser = getUser();
         UserAccountDetails debitAccountDetails = getAccount();
-        debitAccountDetails.setAvailableBalance(10.);
+        debitAccountDetails.setBalance(10.);
         UserAccountDetails creditAccountDetails = getAccount();
-        creditAccountDetails.setAvailableBalance(1.);
+        creditAccountDetails.setBalance(1.);
         when(accountRespository.updateBalanceAndEarMarkAmount(Mockito.anyInt(), Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyInt())).thenThrow(NullPointerException.class);
         Assert.assertEquals( PaymentTransactionTypes.PAYMENT_TRANCTION_FAILURE, transactionService.createPaymentTransaction(10.00, 8.00, 10.00, 12.00, 2.00, debitUser, creditUser, debitAccountDetails, creditAccountDetails, TransactionTypes.FUND_TRANSFER));
 
@@ -90,7 +90,7 @@ public class TransactionServiceImplTest {
         userAccountDetails.setEarMarkAmount(0.);
         userAccountDetails.setUserid(1);
         userAccountDetails.setVersion(1);
-        userAccountDetails.setAvailableBalance(10.);
+        userAccountDetails.setBalance(10.);
 
         return userAccountDetails;
     }

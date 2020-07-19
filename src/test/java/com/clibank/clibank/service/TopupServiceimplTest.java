@@ -94,7 +94,7 @@ public class TopupServiceimplTest {
         userAccountDetails.setEarMarkAmount(0.);
         userAccountDetails.setUserid(1);
         userAccountDetails.setVersion(1);
-        userAccountDetails.setAvailableBalance(10.);
+        userAccountDetails.setBalance(10.);
 
         return userAccountDetails;
     }

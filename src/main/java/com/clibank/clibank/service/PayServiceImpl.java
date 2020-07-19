@@ -47,7 +47,7 @@ public class PayServiceImpl implements PayService {
         User creditUser = userRepository.getUserByid(creditAccountDetails.getUserid());
 
         // Do not Allow Payment if Balance is Zero //Assumption
-        if (debitAccountDetails.getAvailableBalance() <= 0.0) {
+        if (debitAccountDetails.getBalance() <= 0.0) {
             log.info("debitAccount Balance Less than 0 ");
             return PaymentTransactionTypes.INVALID_PAYMENT_TRANSACTION_NO_DEBIT_BALANCE;
         }
@@ -69,7 +69,7 @@ public class PayServiceImpl implements PayService {
         }
 
         //Check Balance >= Transaction Amount
-        if (debitAccountDetails.getAvailableBalance() >= transactionAmount) {
+        if (debitAccountDetails.getBalance() >= transactionAmount) {
             log.info("debitAccountDetails.getAvailableBalance() >= transactionAmount ");
             return payTranAmountLessOrEqualToBalance(debitUser, creditUser, debitAccountDetails, creditAccountDetails, transactionAmount);
 
@@ -128,7 +128,7 @@ public class PayServiceImpl implements PayService {
                     log.info("updating updatedLoanAmount -- Transaction Success");
                     // Create a Payment Record
                     debitAccountDetails = accountRespository.getUserAccountDetails(debitUser.getId());
-                    Double debitAccountOriginalbalance = debitAccountDetails.getAvailableBalance();
+                    Double debitAccountOriginalbalance = debitAccountDetails.getBalance();
 
                     // Doube transaction Amount
                     Double loanTransactionAmount = originalLoanAmount - updatedLoanAmount;
@@ -186,17 +186,17 @@ public class PayServiceImpl implements PayService {
             return PaymentTransactionTypes.LOAN_ACCOUNT_CREATION_FAILURE;
         }
         //debitAccountOrignialBalance
-        Double debitAccountOrignialBalance = debitAccountDetails.getAvailableBalance();
+        Double debitAccountOrignialBalance = debitAccountDetails.getBalance();
         // debit Account Original LoanAmount
         Double debitAccountOriginalLoanAmount = userLoanDetails.getBalance();
         // debit Amount from debitAccount
-        Double creditAccountOrignialBalance = creditAccountDetails.getAvailableBalance();
+        Double creditAccountOrignialBalance = creditAccountDetails.getBalance();
         // updated latest Balance = creditaccountpresentbalance + transactionAmount
 
         Double updatedDebitBalance = 0.0;
         // updated latest Balance = creditaccountpresentbalance + transactionAmount
 
-        Double updatedTransactionAmount = debitAccountDetails.getAvailableBalance();
+        Double updatedTransactionAmount = debitAccountDetails.getBalance();
 
         Double DebitLoanBalanceToCreditor = debitAccountOriginalLoanAmount + Math.abs(debitAccountOrignialBalance - transactionAmount);
         // creditAccountOrignialBalance
@@ -257,11 +257,11 @@ public class PayServiceImpl implements PayService {
                                                                              transactionAmount) {
 
         //debitAccountOrignialBalance
-        Double debitAccountOrignialBalance = debitAccountDetails.getAvailableBalance();
+        Double debitAccountOrignialBalance = debitAccountDetails.getBalance();
         // debit Amount from debitAccount
         Double updatedDebitBalance = debitAccountOrignialBalance - transactionAmount;
         // creditAccountOrignialBalance
-        Double creditAccountOrignialBalance = creditAccountDetails.getAvailableBalance();
+        Double creditAccountOrignialBalance = creditAccountDetails.getBalance();
         // updated latest Balance = creditaccountpresentbalance + transactionAmount
         Double creditUpdatedAccountBalance = creditAccountOrignialBalance + transactionAmount;
 
